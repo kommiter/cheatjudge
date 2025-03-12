@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# 커밋 메시지를 읽기
+commit_message_file="$1"
+commit_message=$(cat "$commit_message_file")
+
+# 현재 브랜치 이름 가져오기
+branch_name=$(git symbolic-ref --short HEAD)
+
+# 브랜치명에서 숫자 포함된 이슈 번호 추출 (예: #11)
+issue_number=$(echo "$branch_name" | sed -E 's|^.*/(#?[0-9]+).*|\1|')
+
+# 커밋 메시지 뒤에 (#이슈번호) 추가
+new_commit_message="$commit_message ($issue_number)"
+
+# 수정된 커밋 메시지를 저장
+echo "$new_commit_message" > "$commit_message_file"
+
+# commitlint 실행
+npx --no-install commitlint --edit "$commit_message_file"
