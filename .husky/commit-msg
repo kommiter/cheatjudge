@@ -10,8 +10,17 @@ branch_name=$(git symbolic-ref --short HEAD)
 # 브랜치명에서 숫자 포함된 이슈 번호 추출 (예: #11)
 issue_number=$(echo "$branch_name" | sed -E 's|^.*/(#?[0-9]+).*|\1|')
 
-# 커밋 메시지 뒤에 (#이슈번호) 추가
-new_commit_message="$commit_message ($issue_number)"
+# 커밋 메시지에서 첫 줄(제목)과 본문 분리
+commit_title=$(echo "$commit_message" | sed -n '1p')
+commit_body=$(echo "$commit_message" | sed '1d')
+
+# 제목 뒤에 (#이슈번호) 추가
+if [ -n "$issue_number" ]; then
+    new_commit_message="$commit_title ($issue_number)"
+else
+    new_commit_message="$commit_title"
+fi
+[ -n "$commit_body" ] && new_commit_message="$new_commit_message"$'\n'"$commit_body"
 
 # 수정된 커밋 메시지를 저장
 echo "$new_commit_message" > "$commit_message_file"
