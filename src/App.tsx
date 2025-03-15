@@ -1,6 +1,4 @@
 import QueryProvider from '@/contexts/QueryProvider.tsx'
-import { Outlet } from 'react-router'
-import { Toaster } from 'sonner'
 import './index.css'
 
 function InnerLayout() {
@@ -49,9 +47,7 @@ function InnerLayout() {
 function App() {
   return (
     <QueryProvider>
-      <Outlet />
       <InnerLayout />
-      <Toaster richColors />
     </QueryProvider>
   )
 }
