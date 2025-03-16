@@ -31,7 +31,7 @@ function InnerLayout() {
         </div>
         {/* Right sidebar & main wrapper */}
         <div className="flex-1 h-full">
-          <div className="rounded-[8px]m-[4px] bg-[#ffffff] px-4 py-6 ">
+          <div className="rounded-[8px] m-[4px] bg-[#ffffff] px-4 py-6 ">
             {/* Main area */}IDE{' '}
             <button className="border-1" onClick={() => {}}>
               Hide
