@@ -5,10 +5,12 @@ const Home = lazy(() => import('@/pages/Home'))
 const Error = lazy(() => import('@/pages/Error'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 const IDE = lazy(() => import('@/pages/IDE'))
+const Lobby = lazy(() => import('@/pages/Lobby'))
 
 export const PATH = {
   HOME: '/',
   STUDENT: '/student',
+  LOBBY: '/lobby',
 }
 
 const routes: RouteObject[] = [
@@ -35,6 +37,10 @@ const routes: RouteObject[] = [
           {
             path: PATH.STUDENT,
             element: <IDE />,
+          },
+          {
+            path: PATH.LOBBY,
+            element: <Lobby />,
           },
         ],
       },
