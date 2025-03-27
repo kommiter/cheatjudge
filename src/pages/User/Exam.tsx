@@ -7,22 +7,27 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button.tsx'
+import { Card, CardContent } from '@/components/ui/card.tsx'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs.tsx'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@/components/ui/tooltip.tsx'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select.tsx'
 
 interface TestResult {
   id: number
@@ -32,7 +37,7 @@ interface TestResult {
   actualOutput: string
   time: string
 }
-export default function IDE() {
+export default function Student() {
   const [output, setOutput] = useState('')
   const [testResults] = useState<TestResult[]>([
     {

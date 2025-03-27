@@ -1,14 +1,19 @@
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button.tsx'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
+} from '@/components/ui/card.tsx'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs.tsx'
+import { Badge } from '@/components/ui/badge.tsx'
 import { Clock, FileText, CheckCircle, AlertCircle } from 'lucide-react'
 
 // Type definitions
@@ -29,7 +34,7 @@ interface PastExam {
   status: string
 }
 
-export default function StudentDashboard() {
+export default function UserDashboard() {
   const [activeExams] = useState<ActiveExam[]>([
     {
       id: 'E001',
