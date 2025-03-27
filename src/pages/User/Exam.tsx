@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx'
+import { CodeEditor } from '@/components/common/CodeEditor.tsx'
 
 interface TestResult {
   id: number
@@ -378,14 +379,8 @@ int main() {
         </div>
 
         <div className="flex flex-col">
-          <div className="flex-1 border-b">
-            <div className="h-full rounded-md bg-muted p-4 font-mono">
-              <textarea
-                className="h-full w-full resize-none bg-transparent outline-none"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </div>
+          <div className="flex-1 border-b bg-muted">
+            <CodeEditor initialCode={code} onChange={setCode} />
           </div>
 
           <div className="flex-1">
