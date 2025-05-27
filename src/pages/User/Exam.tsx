@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Play,
   CheckCircle,
@@ -94,6 +94,30 @@ int main() {
     ],
   })
 
+  const initialTime = 30 * 60 // 30분을 초 단위로
+  const [remainingTime, setRemainingTime] = useState(initialTime)
+
+  useEffect(() => {
+    if (remainingTime <= 0) {
+      // 시간이 다 되면 실행할 로직 (예: 시험 자동 제출)
+      console.log('시간 종료!')
+      return
+    }
+
+    const timerId = setInterval(() => {
+      setRemainingTime((prevTime) => prevTime - 1)
+    }, 1000)
+
+    return () => clearInterval(timerId) // 컴포넌트 언마운트 시 타이머 정리
+  }, [remainingTime])
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
   const currentProblem = examData.problems[examData.currentProblem - 1]
 
   const runCode = () => {
@@ -143,7 +167,7 @@ int main() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>남은 시간: 01:45:30</span>
+            <span>남은 시간: {formatTime(remainingTime)}</span>
           </div>
           <Select defaultValue="cpp">
             <SelectTrigger className="w-[180px]">
@@ -379,7 +403,7 @@ int main() {
         </div>
 
         <div className="flex flex-col">
-          <div className="flex-1 border-b bg-muted">
+          <div className="flex-1 border-b bg-muted p-4 rounded-lg">
             <CodeEditor initialCode={code} onChange={setCode} />
           </div>
 
