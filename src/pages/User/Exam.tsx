@@ -98,18 +98,20 @@ int main() {
   const [remainingTime, setRemainingTime] = useState(initialTime)
 
   useEffect(() => {
-    if (remainingTime <= 0) {
-      // 시간이 다 되면 실행할 로직 (예: 시험 자동 제출)
-      console.log('시간 종료!')
-      return
-    }
-
     const timerId = setInterval(() => {
-      setRemainingTime((prevTime) => prevTime - 1)
+      setRemainingTime((prevTime) => {
+        if (prevTime <= 1) {
+          // 시간이 다 되면 실행할 로직 (예: 시험 자동 제출)
+          console.log('시간 종료!')
+          clearInterval(timerId)
+          return 0
+        }
+        return prevTime - 1
+      })
     }, 1000)
 
     return () => clearInterval(timerId) // 컴포넌트 언마운트 시 타이머 정리
-  }, [remainingTime])
+  }, []) // 빈 의존성 배열로 한 번만 실행
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
