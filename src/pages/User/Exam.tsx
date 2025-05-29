@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Play,
   CheckCircle,
@@ -29,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select.tsx'
 import { CodeEditor } from '@/components/common/CodeEditor.tsx'
+import webgazer from 'webgazer'
 
 interface TestResult {
   id: number
@@ -96,6 +98,55 @@ int main() {
 
   const initialTime = 30 * 60 // 30분을 초 단위로
   const [remainingTime, setRemainingTime] = useState(initialTime)
+
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // 캘리브레이션 체크
+    if (sessionStorage.getItem('calibrated') !== 'true') {
+      navigate('/calibration')
+      return
+    }
+
+    let isInitialized = false
+
+    const initializeWebgazer = async () => {
+      try {
+        // webgazer 초기화
+        webgazer.setGazeListener((data: { x: number; y: number } | null) => {
+          if (data == null) return
+
+          const { x, y } = data
+          const windowWidth = window.innerWidth
+          const windowHeight = window.innerHeight
+
+          // 화면 밖을 바라보는지 체크
+          if (x < 0 || x > windowWidth || y < 0 || y > windowHeight) {
+            alert('화면 밖을 바라보고 있습니다. 시험에 집중해주세요.')
+          }
+        })
+
+        // webgazer 시작
+        webgazer.begin()
+        webgazer.showPredictionPoints(true)
+        isInitialized = true
+      } catch (error) {
+        console.error('Webgazer 초기화 실패:', error)
+      }
+    }
+
+    initializeWebgazer()
+
+    return () => {
+      if (isInitialized) {
+        try {
+          webgazer.end()
+        } catch (error) {
+          console.error('Webgazer 정리 실패:', error)
+        }
+      }
+    }
+  }, [navigate])
 
   useEffect(() => {
     const timerId = setInterval(() => {
