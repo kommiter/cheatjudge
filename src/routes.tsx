@@ -9,7 +9,6 @@ const NotFound = lazy(() => import('@/pages/NotFound'))
 
 // 유저 페이지
 const UserLayout = lazy(() => import('@/components/layout/UserLayout'))
-const UserDashboard = lazy(() => import('@/pages/User/UserDashboard.tsx'))
 const Exam = lazy(() => import('@/pages/User/Exam.tsx'))
 
 // 어드민 페이지
@@ -53,7 +52,7 @@ const routes: RouteObject[] = [
             children: [
               {
                 index: true,
-                element: <UserDashboard />,
+                element: <Exam />,
               },
               {
                 path: PATH.EXAM,

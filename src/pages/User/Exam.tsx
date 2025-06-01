@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select.tsx'
 import { CodeEditor } from '@/components/common/CodeEditor.tsx'
 import webgazer from 'webgazer'
+import Calibration from '@/pages/Calibration'
 
 interface TestResult {
   id: number
@@ -40,7 +41,8 @@ interface TestResult {
   actualOutput: string
   time: string
 }
-export default function Student() {
+
+export default function Exam() {
   const [output, setOutput] = useState('')
   const [testResults] = useState<TestResult[]>([
     {
@@ -99,12 +101,14 @@ int main() {
   const initialTime = 30 * 60 // 30분을 초 단위로
   const [remainingTime, setRemainingTime] = useState(initialTime)
 
+  const [isCalibrationOpen, setIsCalibrationOpen] = useState(false)
+
   const navigate = useNavigate()
 
   useEffect(() => {
     // 캘리브레이션 체크
     if (sessionStorage.getItem('calibrated') !== 'true') {
-      navigate('/calibration')
+      setIsCalibrationOpen(true)
       return
     }
 
@@ -208,341 +212,351 @@ int main() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold">{'문제제목'}</h1>
-          <div className="rounded-full bg-muted px-3 py-1 text-sm">
-            학생 이름
+    <>
+      <Calibration
+        isOpen={isCalibrationOpen}
+        onClose={() => setIsCalibrationOpen(false)}
+      />
+      <div className="flex h-screen flex-col">
+        <header className="flex items-center justify-between border-b px-4 py-2">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold">{'문제제목'}</h1>
+            <div className="rounded-full bg-muted px-3 py-1 text-sm">
+              학생 이름
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>남은 시간: {formatTime(remainingTime)}</span>
+            </div>
+            <Select defaultValue="cpp">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="언어 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="c">C</SelectItem>
+                <SelectItem value="cpp">C++</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="javascript">JavaScript</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={runCode}>
+              <Play className="mr-2 h-4 w-4" />
+              실행
+            </Button>
+            <Button onClick={() => toggleProblemCompletion(currentProblem.id)}>
+              제출
+            </Button>
+          </div>
+        </header>
+
+        {/* Problem Navigation Bar */}
+        <div className="border-b bg-muted/30 px-4 py-3">
+          <div className="mx-auto flex max-w-6xl items-center justify-between">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigateToProblem('prev')}
+                    disabled={examData.currentProblem === 1}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>이전 문제</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <div className="flex items-center justify-center gap-2">
+              {examData.problems.map((problem) => (
+                <TooltipProvider key={problem.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={
+                          examData.currentProblem === problem.id
+                            ? 'default'
+                            : 'outline'
+                        }
+                        size="sm"
+                        className={`h-10 w-10 ${
+                          problem.completed
+                            ? 'border-green-500 bg-green-500 text-white hover:bg-green-600'
+                            : examData.currentProblem === problem.id
+                              ? ''
+                              : 'hover:border-primary'
+                        }`}
+                        onClick={() => goToProblem(problem.id)}
+                      >
+                        {problem.id}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-center">
+                        <div className="font-medium">{problem.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          난이도: {problem.difficulty}
+                        </div>
+                        <div className="mt-1 text-xs">
+                          {problem.completed ? (
+                            <span className="flex items-center gap-1 text-green-500">
+                              <CheckCircle className="h-3 w-3" />
+                              완료됨
+                            </span>
+                          ) : (
+                            <span>미완료</span>
+                          )}
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </div>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigateToProblem('next')}
+                    disabled={
+                      examData.currentProblem === examData.totalProblems
+                    }
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>다음 문제</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>남은 시간: {formatTime(remainingTime)}</span>
-          </div>
-          <Select defaultValue="cpp">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="언어 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="c">C</SelectItem>
-              <SelectItem value="cpp">C++</SelectItem>
-              <SelectItem value="java">Java</SelectItem>
-              <SelectItem value="python">Python</SelectItem>
-              <SelectItem value="javascript">JavaScript</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={runCode}>
-            <Play className="mr-2 h-4 w-4" />
-            실행
-          </Button>
-          <Button onClick={() => toggleProblemCompletion(currentProblem.id)}>
-            제출
-          </Button>
-        </div>
-      </header>
-
-      {/* Problem Navigation Bar */}
-      <div className="border-b bg-muted/30 px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigateToProblem('prev')}
-                  disabled={examData.currentProblem === 1}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>이전 문제</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <div className="flex items-center justify-center gap-2">
-            {examData.problems.map((problem) => (
-              <TooltipProvider key={problem.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={
-                        examData.currentProblem === problem.id
-                          ? 'default'
-                          : 'outline'
-                      }
-                      size="sm"
-                      className={`h-10 w-10 ${
-                        problem.completed
-                          ? 'border-green-500 bg-green-500 text-white hover:bg-green-600'
-                          : examData.currentProblem === problem.id
-                            ? ''
-                            : 'hover:border-primary'
-                      }`}
-                      onClick={() => goToProblem(problem.id)}
-                    >
-                      {problem.id}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-center">
-                      <div className="font-medium">{problem.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        난이도: {problem.difficulty}
-                      </div>
-                      <div className="mt-1 text-xs">
-                        {problem.completed ? (
-                          <span className="flex items-center gap-1 text-green-500">
-                            <CheckCircle className="h-3 w-3" />
-                            완료됨
-                          </span>
-                        ) : (
-                          <span>미완료</span>
-                        )}
-                      </div>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-          </div>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigateToProblem('next')}
-                  disabled={examData.currentProblem === examData.totalProblems}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>다음 문제</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-
-      {/* Rest of the component remains the same as in the original */}
-      <div className="grid flex-1 grid-cols-2">
-        <div className="flex flex-col border-r">
-          <Tabs defaultValue="problem" className="flex-1">
-            <TabsList className="mx-4 mt-2 justify-start">
-              <TabsTrigger value="problem">문제</TabsTrigger>
-              <TabsTrigger value="submissions">제출 기록</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="problem" className="flex-1 overflow-auto p-4">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-xl font-bold">{currentProblem.title}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    난이도: {currentProblem.difficulty}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold">문제 설명</h3>
-                  <p className="mt-2">
-                    두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을
-                    작성하시오.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold">입력</h3>
-                  <p className="mt-2">
-                    첫째 줄에 A와 B가 주어진다. (0 &lt; A, B &lt; 10)
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold">출력</h3>
-                  <p className="mt-2">첫째 줄에 A+B를 출력한다.</p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold">예제 입력 1</h3>
-                  <pre className="mt-2 rounded-md bg-muted p-4 font-mono">
-                    1 2
-                  </pre>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold">예제 출력 1</h3>
-                  <pre className="mt-2 rounded-md bg-muted p-4 font-mono">
-                    3
-                  </pre>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="submissions"
-              className="flex-1 overflow-auto p-4"
-            >
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">제출 기록</h2>
-
-                <div className="space-y-2">
-                  <Card>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">제출 #3</p>
-                        <p className="text-sm text-muted-foreground">
-                          2025-03-19 14:32:45
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          C++
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-red-500">
-                          <AlertCircle className="h-4 w-4" />
-                          오답
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">제출 #2</p>
-                        <p className="text-sm text-muted-foreground">
-                          2025-03-19 14:30:12
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          C++
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-red-500">
-                          <AlertCircle className="h-4 w-4" />
-                          컴파일 에러
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">제출 #1</p>
-                        <p className="text-sm text-muted-foreground">
-                          2025-03-19 14:25:33
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          C++
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-red-500">
-                          <AlertCircle className="h-4 w-4" />
-                          오답
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex-1 border-b bg-muted p-4 rounded-lg">
-            <CodeEditor initialCode={code} onChange={setCode} />
-          </div>
-
-          <div className="flex-1">
-            <Tabs defaultValue="output">
+        {/* Rest of the component remains the same as in the original */}
+        <div className="grid flex-1 grid-cols-2">
+          <div className="flex flex-col border-r">
+            <Tabs defaultValue="problem" className="flex-1">
               <TabsList className="mx-4 mt-2 justify-start">
-                <TabsTrigger value="output">실행 결과</TabsTrigger>
-                <TabsTrigger value="testcases">테스트 케이스</TabsTrigger>
+                <TabsTrigger value="problem">문제</TabsTrigger>
+                <TabsTrigger value="submissions">제출 기록</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="output" className="p-4">
-                <pre className="h-full rounded-md bg-muted p-4 font-mono text-sm">
-                  {output || '코드를 실행하면 결과가 여기에 표시됩니다.'}
-                </pre>
+              <TabsContent value="problem" className="flex-1 overflow-auto p-4">
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-xl font-bold">
+                      {currentProblem.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      난이도: {currentProblem.difficulty}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold">문제 설명</h3>
+                    <p className="mt-2">
+                      두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을
+                      작성하시오.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold">입력</h3>
+                    <p className="mt-2">
+                      첫째 줄에 A와 B가 주어진다. (0 &lt; A, B &lt; 10)
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold">출력</h3>
+                    <p className="mt-2">첫째 줄에 A+B를 출력한다.</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold">예제 입력 1</h3>
+                    <pre className="mt-2 rounded-md bg-muted p-4 font-mono">
+                      1 2
+                    </pre>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold">예제 출력 1</h3>
+                    <pre className="mt-2 rounded-md bg-muted p-4 font-mono">
+                      3
+                    </pre>
+                  </div>
+                </div>
               </TabsContent>
 
-              <TabsContent value="testcases" className="p-4">
-                <div className="space-y-2">
-                  {testResults.map((test) => (
-                    <Card key={test.id}>
-                      <CardContent className="p-4">
-                        <div className="mb-2 flex items-center justify-between">
-                          <h3 className="font-medium">
-                            테스트 케이스 #{test.id}
-                          </h3>
-                          <div className="flex items-center gap-1">
-                            {test.status === 'success' && (
-                              <span className="flex items-center gap-1 text-sm text-green-500">
-                                <CheckCircle className="h-4 w-4" />
-                                통과
-                              </span>
-                            )}
-                            {test.status === 'error' && (
-                              <span className="flex items-center gap-1 text-sm text-red-500">
-                                <AlertCircle className="h-4 w-4" />
-                                실패
-                              </span>
-                            )}
-                            {test.status === 'pending' && (
-                              <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                                대기 중
-                              </span>
-                            )}
-                            {test.time && (
-                              <span className="text-sm text-muted-foreground">
-                                {test.time}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+              <TabsContent
+                value="submissions"
+                className="flex-1 overflow-auto p-4"
+              >
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold">제출 기록</h2>
 
-                        <div className="grid gap-2 md:grid-cols-3">
-                          <div>
-                            <p className="text-xs text-muted-foreground">
-                              입력:
-                            </p>
-                            <pre className="mt-1 rounded-md bg-muted p-2 text-xs">
-                              {test.input}
-                            </pre>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">
-                              예상 출력:
-                            </p>
-                            <pre className="mt-1 rounded-md bg-muted p-2 text-xs">
-                              {test.expectedOutput}
-                            </pre>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">
-                              실제 출력:
-                            </p>
-                            <pre className="mt-1 rounded-md bg-muted p-2 text-xs">
-                              {test.actualOutput || '없음'}
-                            </pre>
-                          </div>
+                  <div className="space-y-2">
+                    <Card>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div>
+                          <p className="font-medium">제출 #3</p>
+                          <p className="text-sm text-muted-foreground">
+                            2025-03-19 14:32:45
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            C++
+                          </span>
+                          <span className="flex items-center gap-1 text-sm text-red-500">
+                            <AlertCircle className="h-4 w-4" />
+                            오답
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+
+                    <Card>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div>
+                          <p className="font-medium">제출 #2</p>
+                          <p className="text-sm text-muted-foreground">
+                            2025-03-19 14:30:12
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            C++
+                          </span>
+                          <span className="flex items-center gap-1 text-sm text-red-500">
+                            <AlertCircle className="h-4 w-4" />
+                            컴파일 에러
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div>
+                          <p className="font-medium">제출 #1</p>
+                          <p className="text-sm text-muted-foreground">
+                            2025-03-19 14:25:33
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            C++
+                          </span>
+                          <span className="flex items-center gap-1 text-sm text-red-500">
+                            <AlertCircle className="h-4 w-4" />
+                            오답
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
           </div>
+
+          <div className="flex flex-col">
+            <div className="flex-1 border-b bg-muted p-4 rounded-lg">
+              <CodeEditor initialCode={code} onChange={setCode} />
+            </div>
+
+            <div className="flex-1">
+              <Tabs defaultValue="output">
+                <TabsList className="mx-4 mt-2 justify-start">
+                  <TabsTrigger value="output">실행 결과</TabsTrigger>
+                  <TabsTrigger value="testcases">테스트 케이스</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="output" className="p-4">
+                  <pre className="h-full rounded-md bg-muted p-4 font-mono text-sm">
+                    {output || '코드를 실행하면 결과가 여기에 표시됩니다.'}
+                  </pre>
+                </TabsContent>
+
+                <TabsContent value="testcases" className="p-4">
+                  <div className="space-y-2">
+                    {testResults.map((test) => (
+                      <Card key={test.id}>
+                        <CardContent className="p-4">
+                          <div className="mb-2 flex items-center justify-between">
+                            <h3 className="font-medium">
+                              테스트 케이스 #{test.id}
+                            </h3>
+                            <div className="flex items-center gap-1">
+                              {test.status === 'success' && (
+                                <span className="flex items-center gap-1 text-sm text-green-500">
+                                  <CheckCircle className="h-4 w-4" />
+                                  통과
+                                </span>
+                              )}
+                              {test.status === 'error' && (
+                                <span className="flex items-center gap-1 text-sm text-red-500">
+                                  <AlertCircle className="h-4 w-4" />
+                                  실패
+                                </span>
+                              )}
+                              {test.status === 'pending' && (
+                                <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  대기 중
+                                </span>
+                              )}
+                              {test.time && (
+                                <span className="text-sm text-muted-foreground">
+                                  {test.time}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid gap-2 md:grid-cols-3">
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                입력:
+                              </p>
+                              <pre className="mt-1 rounded-md bg-muted p-2 text-xs">
+                                {test.input}
+                              </pre>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                예상 출력:
+                              </p>
+                              <pre className="mt-1 rounded-md bg-muted p-2 text-xs">
+                                {test.expectedOutput}
+                              </pre>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                실제 출력:
+                              </p>
+                              <pre className="mt-1 rounded-md bg-muted p-2 text-xs">
+                                {test.actualOutput || '없음'}
+                              </pre>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
