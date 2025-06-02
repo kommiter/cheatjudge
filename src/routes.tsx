@@ -8,6 +8,7 @@ const Error = lazy(() => import('@/pages/Error'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 // 유저 페이지
+const Calibration = lazy(() => import('@/pages/Calibration'))
 const UserLayout = lazy(() => import('@/components/layout/UserLayout'))
 const Exam = lazy(() => import('@/pages/User/Exam.tsx'))
 
@@ -52,7 +53,7 @@ const routes: RouteObject[] = [
             children: [
               {
                 index: true,
-                element: <Exam />,
+                element: <Calibration />,
               },
               {
                 path: PATH.EXAM,
