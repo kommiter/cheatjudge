@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import webgazer from 'webgazer'
+import { useCalibration } from '@/contexts/CalibrationProvider'
 
 interface CalibrationPoint {
   id: number
@@ -14,6 +15,7 @@ const CARD_HORIZONTAL_PADDING = 32
 
 export default function Calibration() {
   const navigate = useNavigate()
+  const { setCalibrated } = useCalibration()
   const [points, setPoints] = useState<CalibrationPoint[]>([
     { id: 1, x: 5, y: 5, samples: 0 },
     { id: 2, x: 50, y: 5, samples: 0 },
@@ -100,12 +102,6 @@ export default function Calibration() {
     }
 
     initializeWebgazer()
-    return () => {
-      // 페이지를 떠날 때 webgazer를 종료할지 여부는 애플리케이션의 디자인에 따라 다릅니다.
-      // 예를 들어, 다른 페이지로 이동해도 계속 트래킹하고 싶다면 종료하지 않을 수 있습니다.
-      // 지금은 종료하지 않도록 유지합니다.
-      // webgazer.end()
-    }
   }, [])
 
   const handlePointClick = (idx: number) => {
@@ -138,7 +134,8 @@ export default function Calibration() {
       await webgazer.showVideo(true)
       await webgazer.showPredictionPoints(false)
       await webgazer.setGazeListener(() => {})
-      navigate('/exam')
+      setCalibrated() // 캘리브레이션 상태를 전역으로 설정
+      navigate('/')
     } catch (error) {
       console.error('Webgazer 활성화 실패:', error)
     }

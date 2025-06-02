@@ -6,9 +6,9 @@ const App = lazy(() => import('@/App.tsx'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const Error = lazy(() => import('@/pages/Error'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
+const Calibration = lazy(() => import('@/pages/Calibration'))
 
 // 유저 페이지
-const Calibration = lazy(() => import('@/pages/Calibration'))
 const UserLayout = lazy(() => import('@/components/layout/UserLayout'))
 const Exam = lazy(() => import('@/pages/User/Exam.tsx'))
 
@@ -20,8 +20,10 @@ export const PATH = {
   Landing: '/landing',
 
   // 유저
-  USER_DASHBOARD: '/',
-  EXAM: '/exam',
+  EXAM: '/',
+
+  // 캘리브레이션
+  CALIBRATION: '/calibration',
 
   // 어드민
   ADMIN: '/admin',
@@ -29,7 +31,7 @@ export const PATH = {
 
 const routes: RouteObject[] = [
   {
-    path: PATH.USER_DASHBOARD,
+    path: PATH.EXAM,
     element: (
       <Suspense>
         <App />
@@ -53,13 +55,14 @@ const routes: RouteObject[] = [
             children: [
               {
                 index: true,
-                element: <Calibration />,
-              },
-              {
-                path: PATH.EXAM,
                 element: <Exam />,
               },
             ],
+          },
+          {
+            // 캘리브레이션 라우트
+            path: PATH.CALIBRATION,
+            element: <Calibration />,
           },
           {
             // 어드민 라우트
