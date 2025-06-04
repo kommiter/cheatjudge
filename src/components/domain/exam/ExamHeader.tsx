@@ -8,12 +8,13 @@ import {
   SelectValue,
 } from '@/components/ui/select.tsx'
 import { formatTime } from '@/utils/exam.ts'
+import { useExamTimer } from '@/hooks/useExamTimer'
+import { INITIAL_EXAM_TIME } from '@/constants/exam'
 import type { Problem } from '@/types/exam.ts'
 
 interface ExamHeaderProps {
   problemTitle: string
   studentName: string
-  remainingTime: number
   selectedLanguage: string
   onLanguageChange: (language: string) => void
   onRunCode: () => void
@@ -24,12 +25,13 @@ interface ExamHeaderProps {
 export const ExamHeader = ({
   problemTitle,
   studentName,
-  remainingTime,
   selectedLanguage,
   onLanguageChange,
   onRunCode,
   onSubmit,
 }: ExamHeaderProps) => {
+  const { remainingTime } = useExamTimer(INITIAL_EXAM_TIME)
+
   return (
     <header className="flex items-center justify-between border-b px-4 py-2">
       <div className="flex items-center gap-4">
