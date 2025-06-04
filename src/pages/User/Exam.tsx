@@ -81,7 +81,7 @@ export default function Exam() {
     <div className="flex h-screen flex-col">
       <ExamHeader
         problemTitle={currentProblem.title}
-        studentName="학생 이름"
+        studentName="홍길동"
         selectedLanguage={selectedLanguage}
         onLanguageChange={setSelectedLanguage}
         onRunCode={runCode}

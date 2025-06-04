@@ -40,14 +40,11 @@ export const MOCK_TEST_RESULTS: TestResult[] = [
 ]
 
 export const MOCK_EXAM_DATA: ExamData = {
-  totalProblems: 5,
+  totalProblems: 1,
   currentProblem: 1,
   problems: [
     { id: 1, title: '두 수의 합', difficulty: '쉬움', completed: true },
-    { id: 2, title: '배열 정렬', difficulty: '중간', completed: false },
-    { id: 3, title: '이진 탐색', difficulty: '중간', completed: false },
-    { id: 4, title: '링크드 리스트', difficulty: '어려움', completed: false },
-    { id: 5, title: '동적 프로그래밍', difficulty: '어려움', completed: false },
+    // { id: 2, title: '배열 정렬', difficulty: '중간', completed: false },
   ],
 }
 

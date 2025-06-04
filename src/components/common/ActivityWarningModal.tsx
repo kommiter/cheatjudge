@@ -75,20 +75,20 @@ export default function ActivityWarningModal({
         return {
           title: '활동 감지 경고',
           message:
-            '30초 동안 활동이 감지되지 않았습니다. 시험을 계속 진행하시겠습니까?',
+            '3초 동안 모니터에 시선이 감지되지 않았습니다. 시험을 계속 진행하시겠습니까?',
           buttonText: '시험 계속하기',
         }
       case 2:
         return {
           title: '최종 경고',
           message:
-            '1분 동안 활동이 감지되지 않았습니다. 2분 후 자동으로 시험이 종료됩니다.',
+            '1분 동안 모니터에 시선이 감지되지 않았습니다. 2분 후 자동으로 시험이 종료됩니다.',
           buttonText: '시험 계속하기',
         }
       case 3:
         return {
           title: '시험 종료',
-          message: '3분 동안 활동이 감지되지 않아 시험이 자동으로 종료됩니다.',
+          message: '3분 동안 시선이 감지되지 않아 시험이 자동으로 종료됩니다.',
           buttonText: '확인',
         }
       default:
@@ -153,8 +153,10 @@ export default function ActivityWarningModal({
           </div>
         </AlertDialogHeader>
 
-        <AlertDialogDescription className="text-center text-gray-600">
-          {message}
+        <div className="text-center text-gray-600">
+          <AlertDialogDescription className="text-center text-gray-600">
+            {message}
+          </AlertDialogDescription>
 
           {/* 카운트다운 표시 */}
           {countdown > 0 && (
@@ -168,7 +170,7 @@ export default function ActivityWarningModal({
               </div>
             </div>
           )}
-        </AlertDialogDescription>
+        </div>
 
         <AlertDialogFooter className="flex gap-2 justify-center">
           {/* 시험 계속하기 버튼 (경고 레벨 1, 2에서만 표시) */}

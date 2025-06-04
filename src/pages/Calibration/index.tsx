@@ -10,7 +10,7 @@ interface CalibrationPoint {
   samples: number
 }
 
-const TOTAL_SAMPLES = 3
+const TOTAL_SAMPLES = process.env.NODE_ENV === 'development' ? 1 : 3
 const CARD_HORIZONTAL_PADDING = 32
 
 export default function Calibration() {
@@ -204,7 +204,7 @@ export default function Calibration() {
       await webgazer.showPredictionPoints(false)
       await webgazer.setGazeListener(() => {})
       setCalibrated()
-      navigate('/')
+      navigate('/', { replace: true })
     } catch (error) {
       console.error('Webgazer 활성화 실패:', error)
     }
