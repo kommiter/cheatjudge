@@ -33,15 +33,45 @@ export default function Exam() {
     toggleProblemCompletion(currentProblem.id)
   }
 
+  // WebGazer 설정을 위한 useEffect 추가
+  useEffect(() => {
+    // Exam 페이지 진입 시 비디오가 보이도록 설정
+    if (window.webgazer) {
+      try {
+        if (typeof window.webgazer.showVideo === 'function') {
+          window.webgazer.showVideo(true)
+        }
+        if (typeof window.webgazer.showPredictionPoints === 'function') {
+          window.webgazer.showPredictionPoints(false)
+        }
+      } catch (error) {
+        console.warn('WebGazer 설정 실패:', error)
+      }
+    }
+
+    return () => {
+      // 컴포넌트 언마운트 시에는 비디오만 숨기고 webgazer는 유지
+      if (window.webgazer) {
+        try {
+          if (typeof window.webgazer.showVideo === 'function') {
+            window.webgazer.showVideo(false)
+          }
+        } catch (error) {
+          console.warn('WebGazer cleanup error in Exam:', error)
+        }
+      }
+    }
+  }, [])
+
   // WebGazer 정리를 위한 useEffect 추가
   useEffect(() => {
     return () => {
       // 컴포넌트 언마운트 시 WebGazer 일시정지
       if (window.webgazer) {
         try {
-          window.webgazer.end()
+          window.webgazer.pause()
         } catch (error) {
-          console.warn('WebGazer cleanup error in Exam:', error)
+          console.warn('WebGazer pause error in Exam:', error)
         }
       }
     }

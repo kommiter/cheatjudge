@@ -109,23 +109,35 @@ export default function Calibration() {
   }, [updateOverlayPosition])
 
   useEffect(() => {
-    // window.webgazer 할당 (import된 webgazer 객체 사용)
     if (typeof window !== 'undefined' && !window.webgazer) {
       window.webgazer = webgazer
     }
 
     let isInitialized = false
+    let isCleanedUp = false
+
     const initializeWebgazer = async () => {
-      if (isInitialized) return
+      if (isInitialized || isCleanedUp) return
       isInitialized = true
 
       try {
+        // 기존 webgazer가 있다면 먼저 정리
+        if (window.webgazer && typeof window.webgazer.end === 'function') {
+          try {
+            await window.webgazer.end()
+          } catch (e) {
+            console.warn('Previous webgazer cleanup warning:', e)
+          }
+        }
+
+        await webgazer.clearData()
         await webgazer.begin()
         await webgazer.setGazeListener(() => {})
         await webgazer.setRegression('ridge')
         await webgazer.setTracker('TFFacemesh')
         await webgazer.showVideo(true)
         await webgazer.showPredictionPoints(true)
+        await webgazer.saveDataAcrossSessions(false)
       } catch (error) {
         console.error('Webgazer 초기화 실패:', error)
         isInitialized = false
@@ -135,14 +147,19 @@ export default function Calibration() {
     initializeWebgazer()
 
     return () => {
+      isCleanedUp = true
       isInitialized = false
+
       // webgazer 정리
-      if (window.webgazer) {
+      if (window.webgazer && !isCleanedUp) {
         try {
-          webgazer.setGazeListener(null)
-          webgazer.showVideo(false)
-          webgazer.showPredictionPoints(false)
-          webgazer.end()
+          if (typeof webgazer.setGazeListener === 'function') {
+            webgazer.setGazeListener(null)
+          }
+          // 비디오는 숨기지만 webgazer는 유지
+          if (typeof webgazer.showPredictionPoints === 'function') {
+            webgazer.showPredictionPoints(false)
+          }
         } catch (error) {
           console.error('Webgazer 정리 실패:', error)
         }
@@ -186,7 +203,7 @@ export default function Calibration() {
       await webgazer.showVideo(true)
       await webgazer.showPredictionPoints(false)
       await webgazer.setGazeListener(() => {})
-      setCalibrated() // 캘리브레이션 상태를 전역으로 설정
+      setCalibrated()
       navigate('/')
     } catch (error) {
       console.error('Webgazer 활성화 실패:', error)

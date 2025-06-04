@@ -18,6 +18,8 @@ interface WebGazer {
   setTracker: (tracker: string) => void
   setSmoothing: (smoothing: boolean) => void
   dataCollector: { data: unknown[] }
+  clearData: () => void
+  saveDataAcrossSessions: (save: boolean) => void
 }
 
 interface Window {
