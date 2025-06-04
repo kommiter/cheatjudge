@@ -7,7 +7,7 @@ export const useExamTimer = (initialTime: number) => {
     const timerId = setInterval(() => {
       setRemainingTime((prevTime) => {
         if (prevTime <= 1) {
-          console.log('시간 종료!')
+          // console.log('시간 종료!')
           clearInterval(timerId)
           return 0
         }

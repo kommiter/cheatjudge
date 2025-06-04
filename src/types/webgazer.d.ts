@@ -6,14 +6,20 @@ interface WebGazer {
   ) => WebGazer
   begin: () => Promise<void>
   end: () => void
+  pause: () => void
+  resume: () => void
+  showVideo: (show: boolean) => void
   showPredictionPoints: (show: boolean) => void
   recordScreenPosition: (x: number, y: number, type: string) => void
   params: { videoWidth: number; videoHeight: number }
   train: () => Promise<void>
   getCurrentPrediction: () => { x: number; y: number } | null
   setRegression: (regression: string) => void
+  setTracker: (tracker: string) => void
   setSmoothing: (smoothing: boolean) => void
   dataCollector: { data: unknown[] }
+  clearData: () => void
+  saveDataAcrossSessions: (save: boolean) => void
 }
 
 interface Window {

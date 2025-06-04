@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import webgazer from 'webgazer'
 import { useCalibration } from '@/contexts/CalibrationProvider'
@@ -15,26 +15,37 @@ const CARD_HORIZONTAL_PADDING = 32
 
 export default function Calibration() {
   const navigate = useNavigate()
-  const { setCalibrated } = useCalibration()
-  const [points, setPoints] = useState<CalibrationPoint[]>([
-    { id: 1, x: 5, y: 5, samples: 0 },
-    { id: 2, x: 50, y: 5, samples: 0 },
-    { id: 3, x: 95, y: 5, samples: 0 },
-    { id: 4, x: 5, y: 50, samples: 0 },
-    { id: 5, x: 50, y: 50, samples: 0 },
-    { id: 6, x: 95, y: 50, samples: 0 },
-    { id: 7, x: 5, y: 95, samples: 0 },
-    { id: 8, x: 50, y: 95, samples: 0 },
-    { id: 9, x: 95, y: 95, samples: 0 },
-  ])
+  const { setCalibrated, updateGazeData } = useCalibration()
+  const [prediction, setPrediction] = useState<{ x: number; y: number } | null>(
+    null,
+  )
+
+  // DOM 요소 캐싱
+  const overlayRef = useRef<HTMLElement | null>(null)
+
+  // 초기 포인트 배열을 useMemo로 최적화
+  const initialPoints = useMemo(
+    () => [
+      { id: 1, x: 5, y: 5, samples: 0 },
+      { id: 2, x: 50, y: 5, samples: 0 },
+      { id: 3, x: 95, y: 5, samples: 0 },
+      { id: 4, x: 5, y: 50, samples: 0 },
+      { id: 5, x: 50, y: 50, samples: 0 },
+      { id: 6, x: 95, y: 50, samples: 0 },
+      { id: 7, x: 5, y: 95, samples: 0 },
+      { id: 8, x: 50, y: 95, samples: 0 },
+      { id: 9, x: 95, y: 95, samples: 0 },
+    ],
+    [],
+  )
+
+  // 포인트 상태를 초기화
+  const [points, setPoints] = useState<CalibrationPoint[]>(initialPoints)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [isCalibrated, setIsCalibrated] = useState(false)
   const [countdown, setCountdown] = useState(5)
   const cardRef = useRef<HTMLDivElement>(null)
   const [isTrained, setIsTrained] = useState(false)
-  const [prediction, setPrediction] = useState<{ x: number; y: number } | null>(
-    null,
-  )
 
   useEffect(() => {
     document.documentElement.classList.add('overflow-hidden', 'h-screen')
@@ -53,69 +64,127 @@ export default function Calibration() {
     }
   }, [countdown])
 
-  useEffect(() => {
-    function updateOverlayPosition() {
-      const card = cardRef.current
-      const overlay = document.querySelector(
+  // updateOverlayPosition 함수를 useCallback으로 최적화
+  const updateOverlayPosition = useCallback(() => {
+    const card = cardRef.current
+    if (!overlayRef.current) {
+      overlayRef.current = document.querySelector(
         '.webgazerFaceOverlay',
       ) as HTMLElement
-      if (card && overlay) {
-        const cardRect = card.getBoundingClientRect()
-        overlay.style.position = 'fixed'
-        overlay.style.left = `${cardRect.left + CARD_HORIZONTAL_PADDING}px`
-        overlay.style.top = `${cardRect.top + 100}px`
-        overlay.style.width = `340px`
-        overlay.style.height = `260px`
-        overlay.style.pointerEvents = 'none'
-        overlay.style.zIndex = '1'
-        overlay.style.background = 'transparent'
-        overlay.style.display = 'block'
-      }
     }
-    const handleUpdate = () => setTimeout(updateOverlayPosition, 100)
-    handleUpdate()
-    window.addEventListener('resize', handleUpdate)
-    window.addEventListener('scroll', handleUpdate)
-    return () => {
-      window.removeEventListener('resize', handleUpdate)
-      window.removeEventListener('scroll', handleUpdate)
+    const overlay = overlayRef.current
+    if (card && overlay) {
+      const cardRect = card.getBoundingClientRect()
+      overlay.style.position = 'fixed'
+      overlay.style.left = `${cardRect.left + CARD_HORIZONTAL_PADDING}px`
+      overlay.style.top = `${cardRect.top + 100}px`
+      overlay.style.width = `340px`
+      overlay.style.height = `260px`
+      overlay.style.pointerEvents = 'none'
+      overlay.style.zIndex = '1'
+      overlay.style.background = 'transparent'
+      overlay.style.display = 'block'
     }
   }, [])
 
   useEffect(() => {
-    // window.webgazer 할당 (import된 webgazer 객체 사용)
+    let timeoutId: NodeJS.Timeout
+
+    const handleUpdate = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(updateOverlayPosition, 100)
+    }
+
+    // 초기 실행
+    handleUpdate()
+
+    window.addEventListener('resize', handleUpdate)
+    window.addEventListener('scroll', handleUpdate)
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      window.removeEventListener('resize', handleUpdate)
+      window.removeEventListener('scroll', handleUpdate)
+    }
+  }, [updateOverlayPosition])
+
+  useEffect(() => {
     if (typeof window !== 'undefined' && !window.webgazer) {
       window.webgazer = webgazer
     }
 
+    let isInitialized = false
+    let isCleanedUp = false
+
     const initializeWebgazer = async () => {
+      if (isInitialized || isCleanedUp) return
+      isInitialized = true
+
       try {
+        // 기존 webgazer가 있다면 먼저 정리
+        if (window.webgazer && typeof window.webgazer.end === 'function') {
+          try {
+            await window.webgazer.end()
+          } catch (e) {
+            console.warn('Previous webgazer cleanup warning:', e)
+          }
+        }
+
+        await webgazer.clearData()
         await webgazer.begin()
         await webgazer.setGazeListener(() => {})
         await webgazer.setRegression('ridge')
         await webgazer.setTracker('TFFacemesh')
         await webgazer.showVideo(true)
         await webgazer.showPredictionPoints(true)
+        await webgazer.saveDataAcrossSessions(false)
       } catch (error) {
         console.error('Webgazer 초기화 실패:', error)
+        isInitialized = false
       }
     }
 
     initializeWebgazer()
+
+    return () => {
+      isCleanedUp = true
+      isInitialized = false
+
+      // webgazer 정리
+      if (window.webgazer && !isCleanedUp) {
+        try {
+          if (typeof webgazer.setGazeListener === 'function') {
+            webgazer.setGazeListener(null)
+          }
+          // 비디오는 숨기지만 webgazer는 유지
+          if (typeof webgazer.showPredictionPoints === 'function') {
+            webgazer.showPredictionPoints(false)
+          }
+        } catch (error) {
+          console.error('Webgazer 정리 실패:', error)
+        }
+      }
+    }
   }, [])
 
-  const handlePointClick = (idx: number) => {
-    if (idx !== currentIdx || isCalibrated) return
-    console.log('Clicked point', idx)
-    const x = (window.innerWidth * points[idx].x) / 100
-    const y = (window.innerHeight * points[idx].y) / 100
-    if (window.webgazer && window.webgazer.recordScreenPosition) {
-      window.webgazer.recordScreenPosition(x, y, 'click')
-    }
-    setPoints((prev) =>
-      prev.map((p, i) => (i === idx ? { ...p, samples: p.samples + 1 } : p)),
-    )
-  }
+  const handlePointClick = useCallback(
+    (event: React.MouseEvent, idx: number) => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (idx !== currentIdx || isCalibrated) return
+      // console.log('Clicked point', idx)
+      const x = (window.innerWidth * points[idx].x) / 100
+      const y = (window.innerHeight * points[idx].y) / 100
+      if (window.webgazer && window.webgazer.recordScreenPosition) {
+        window.webgazer.recordScreenPosition(x, y, 'click')
+      }
+      setPoints((prev) =>
+        prev.map((p, i) => (i === idx ? { ...p, samples: p.samples + 1 } : p)),
+      )
+    },
+    [currentIdx, isCalibrated, points],
+  )
 
   useEffect(() => {
     const curr = points[currentIdx]
@@ -134,14 +203,14 @@ export default function Calibration() {
       await webgazer.showVideo(true)
       await webgazer.showPredictionPoints(false)
       await webgazer.setGazeListener(() => {})
-      setCalibrated() // 캘리브레이션 상태를 전역으로 설정
+      setCalibrated()
       navigate('/')
     } catch (error) {
       console.error('Webgazer 활성화 실패:', error)
     }
   }
 
-  const getCircleProgress = (samples: number) => {
+  const getCircleProgress = useCallback((samples: number) => {
     const r = 18
     const c = 2 * Math.PI * r
     const pct = Math.min(samples / TOTAL_SAMPLES, 1)
@@ -149,7 +218,7 @@ export default function Calibration() {
       strokeDasharray: c,
       strokeDashoffset: c * (1 - pct),
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (isCalibrated && !isTrained) {
@@ -160,12 +229,16 @@ export default function Calibration() {
   useEffect(() => {
     let rafId: number
     let lastPrediction: { x: number; y: number } | null = null
+    let isActive = true // 컴포넌트 활성 상태 추적
+
     if (!isTrained) {
       setPrediction(null)
       return
     }
 
     function loop() {
+      if (!isActive) return // 컴포넌트가 언마운트되면 루프 중단
+
       const pred =
         window.webgazer &&
         window.webgazer.getCurrentPrediction &&
@@ -173,14 +246,48 @@ export default function Calibration() {
       if (pred && pred.x && pred.y) {
         setPrediction({ x: pred.x, y: pred.y })
         lastPrediction = { x: pred.x, y: pred.y }
+        // provider로 시선 데이터 전달
+        updateGazeData(pred.x, pred.y)
       } else if (lastPrediction) {
         setPrediction(lastPrediction)
       }
-      rafId = requestAnimationFrame(loop)
+
+      if (isActive) {
+        rafId = requestAnimationFrame(loop)
+      }
     }
+
     loop()
-    return () => cancelAnimationFrame(rafId)
-  }, [isTrained])
+
+    return () => {
+      isActive = false
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+      }
+      // 시선 데이터 초기화
+      setPrediction(null)
+    }
+  }, [isTrained, updateGazeData])
+
+  // 컴포넌트 언마운트 시 전체 정리
+  useEffect(() => {
+    return () => {
+      // 모든 상태 초기화
+      setPoints(initialPoints)
+      setCurrentIdx(0)
+      setIsCalibrated(false)
+      setCountdown(5)
+      setIsTrained(false)
+      setPrediction(null)
+
+      // DOM 클래스 정리
+      document.documentElement.classList.remove('overflow-hidden', 'h-screen')
+      document.body.classList.remove('overflow-hidden', 'h-screen', 'm-0')
+
+      // overlay 참조 초기화
+      overlayRef.current = null
+    }
+  }, [initialPoints])
 
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center bg-slate-50 relative overflow-hidden m-0 p-0">
@@ -195,8 +302,12 @@ export default function Calibration() {
               ? points.map((point, idx) => (
                   <div
                     key={point.id}
-                    onClick={() => handlePointClick(idx)}
-                    className={`absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center select-none transition-opacity duration-300 
+                    onClick={(e) => handlePointClick(e, idx)}
+                    onDoubleClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    className={`absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center select-none transition-opacity duration-300 z-[99999]
                       ${
                         idx === currentIdx
                           ? 'cursor-pointer opacity-100 pointer-events-auto animate-pulse'
@@ -205,8 +316,6 @@ export default function Calibration() {
                     style={{
                       left: `${point.x}vw`,
                       top: `${point.y}vh`,
-                      zIndex: 99999, // 이 zIndex는 fixed inset-0 div의 zIndex보다 높아야 합니다.
-                      pointerEvents: idx === currentIdx ? 'auto' : 'none',
                     }}
                   >
                     <svg width={48} height={48} pointerEvents="none">
@@ -251,15 +360,10 @@ export default function Calibration() {
               : prediction &&
                 !isTrained && (
                   <div
-                    className="absolute rounded-full bg-red-500"
+                    className="absolute w-7 h-7 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2 z-[99999] shadow-[0_0_20px_4px_rgba(255,0,0,0.67)]"
                     style={{
-                      width: 28,
-                      height: 28,
                       left: prediction.x,
                       top: prediction.y,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 99999,
-                      boxShadow: '0 0 20px 4px #ff0000aa',
                     }}
                   />
                 )}
