@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { useCalibration } from '@/contexts/CalibrationProvider'
 import ActivityWarningModal from '@/components/common/ActivityWarningModal'
+import { PATH } from '@/routes'
 
 export default function UserLayout() {
   const navigate = useNavigate()
@@ -18,7 +19,7 @@ export default function UserLayout() {
   // 캐릭터 교정 확인 및 리다이렉트
   useEffect(() => {
     if (!isCalibrated) {
-      navigate('/calibration', { replace: true })
+      navigate(PATH.CALIBRATION, { replace: true })
     }
   }, [isCalibrated, navigate])
 
@@ -29,15 +30,16 @@ export default function UserLayout() {
     }
   }, [isWebGazerReady, isCalibrated, startGazeTracking])
 
-  const handleModalClose = () => {
+  function handleModalClose() {
     setIsModalOpen(false)
     resetModalState()
   }
 
-  const handleForceExit = useCallback(() => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  function handleForceExit() {
     resetCalibration()
-    navigate('/calibration')
-  }, [resetCalibration, navigate])
+    navigate(PATH.CALIBRATION, { replace: true })
+  }
 
   // 사용자 활동 모니터링
   useEffect(() => {

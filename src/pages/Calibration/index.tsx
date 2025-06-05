@@ -8,6 +8,8 @@ import {
   CALIBRATION_POINTS,
   CALIBRATION_COMPLETE_DELAY,
 } from '@/constants/calibration'
+import { cn } from '@/lib/utils'
+import { PATH } from '@/routes'
 
 export default function Calibration() {
   const navigate = useNavigate()
@@ -31,7 +33,8 @@ export default function Calibration() {
         }
       })
     }
-  }, [isWebGazerReady, initializeWebGazer, isCalibrating, isCompleted])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWebGazerReady, isCalibrating, isCompleted])
 
   const clickCalibrationPoint = (point: CalibrationPoint, index: number) => {
     if (!isCalibrating || index !== currentPointIndex) return
@@ -64,7 +67,7 @@ export default function Calibration() {
 
       // 3초 후 홈으로 자동 이동
       setTimeout(() => {
-        navigate('/', { replace: true })
+        navigate(PATH.EXAM, { replace: true })
       }, CALIBRATION_COMPLETE_DELAY)
     }
   }
@@ -81,23 +84,27 @@ export default function Calibration() {
             return (
               <div
                 key={point.id}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 ease-in-out z-20 ${
+                className={cn(
+                  'absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 ease-in-out z-20',
                   POINT_POSITION_CLASSES[
                     point.id as keyof typeof POINT_POSITION_CLASSES
-                  ]
-                } ${isActive ? 'scale-125' : ''}`}
+                  ],
+                  isActive && 'scale-125',
+                )}
                 onClick={() => clickCalibrationPoint(point, index)}
               >
                 <div
-                  className={`w-10 h-10 rounded-full border-3 flex items-center justify-center font-bold text-white text-sm ${
-                    isPointCompleted
-                      ? 'bg-green-500 border-green-600'
-                      : isActive
-                        ? 'bg-red-500 border-red-600 shadow-lg animate-pulse'
-                        : isCalibrating
-                          ? 'bg-gray-400 border-gray-500'
-                          : 'bg-blue-400 border-blue-500 opacity-50'
-                  }`}
+                  className={cn(
+                    'w-10 h-10 rounded-full border-3 flex items-center justify-center font-bold text-white text-sm',
+                    {
+                      'bg-green-500 border-green-600': isPointCompleted,
+                      'bg-red-500 border-red-600 shadow-lg animate-pulse':
+                        isActive,
+                      'bg-gray-400 border-gray-500':
+                        isCalibrating && !isActive && !isPointCompleted,
+                      'bg-blue-400 border-blue-500 opacity-50': !isCalibrating,
+                    },
+                  )}
                 >
                   {index + 1}
                 </div>

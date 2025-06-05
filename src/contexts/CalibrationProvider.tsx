@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 import type { WebGazerData } from '@/types/webgazer'
 
 interface UserActivity {
@@ -38,7 +38,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
   })
 
   // WebGazer 초기화
-  const initializeWebGazer = async (): Promise<boolean> => {
+  async function initializeWebGazer() {
     try {
       if (!window.webgazer) {
         console.error('WebGazer not loaded')
@@ -73,7 +73,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
   }
 
   // 시선 추적 시작
-  const startGazeTracking = () => {
+  function startGazeTracking() {
     if (!window.webgazer || !isWebGazerReady) return
 
     window.webgazer.setGazeListener((data: WebGazerData | null) => {
@@ -85,13 +85,13 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
   }
 
   // 시선 추적 중지
-  const stopGazeTracking = () => {
+  function stopGazeTracking() {
     if (!window.webgazer) return
     window.webgazer.setGazeListener(() => {})
   }
 
   // 사용자 활동 업데이트
-  const updateUserActivity = (gazeData: WebGazerData) => {
+  function updateUserActivity(gazeData: WebGazerData) {
     const now = Date.now()
     const isOutOfBounds =
       gazeData.x < 0 ||
@@ -132,11 +132,11 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const setCalibrated = () => {
+  function setCalibrated() {
     setIsCalibrated(true)
   }
 
-  const resetModalState = () => {
+  function resetModalState() {
     setUserActivity((prev) => ({
       ...prev,
       warningLevel: 0,
@@ -144,7 +144,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     }))
   }
 
-  const resetCalibration = () => {
+  function resetCalibration() {
     setIsCalibrated(false)
     stopGazeTracking()
     if (window.webgazer) {
@@ -157,11 +157,6 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
       isModalShown: false,
     })
   }
-
-  // 앱 시작 시 WebGazer 초기화
-  useEffect(() => {
-    initializeWebGazer()
-  }, [])
 
   return (
     <CalibrationContext.Provider
