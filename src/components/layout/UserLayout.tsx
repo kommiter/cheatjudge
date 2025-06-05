@@ -5,23 +5,28 @@ import ActivityWarningModal from '@/components/common/ActivityWarningModal'
 
 export default function UserLayout() {
   const navigate = useNavigate()
-  const { isCalibrated, userActivity, resetCalibration } = useCalibration()
+  const {
+    isCalibrated,
+    isWebGazerReady,
+    userActivity,
+    resetCalibration,
+    startGazeTracking,
+  } = useCalibration()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  // 캐릭터 교정 확인 및 리다이렉트
   useEffect(() => {
     if (!isCalibrated) {
-      navigate('/calibration')
+      navigate('/calibration', { replace: true })
     }
   }, [isCalibrated, navigate])
 
-  // 사용자 활동 경고 모달 표시 로직
+  // WebGazer 준비되면 시선 추적 시작
   useEffect(() => {
-    if (isCalibrated && userActivity.warningLevel > 0) {
-      setIsModalOpen(true)
-    } else {
-      setIsModalOpen(false)
+    if (isWebGazerReady && isCalibrated) {
+      startGazeTracking()
     }
-  }, [isCalibrated, userActivity.warningLevel])
+  }, [isWebGazerReady, isCalibrated, startGazeTracking])
 
   const handleModalClose = () => {
     setIsModalOpen(false)
@@ -32,15 +37,20 @@ export default function UserLayout() {
     navigate('/calibration')
   }, [resetCalibration, navigate])
 
-  // 강제 종료 처리
+  // 사용자 활동 모니터링
   useEffect(() => {
-    if (userActivity.warningLevel === 3) {
+    if (userActivity.warningLevel > 0 && !isModalOpen) {
+      setIsModalOpen(true)
+    }
+
+    // 경고 레벨 3일 때 강제 종료
+    if (userActivity.warningLevel >= 3) {
       handleForceExit()
     }
-  }, [userActivity.warningLevel, handleForceExit])
+  }, [userActivity.warningLevel, isModalOpen, handleForceExit])
 
   if (!isCalibrated) {
-    return null // 리다이렉트 중에는 아무것도 렌더링하지 않음
+    return null
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useCalibration } from '@/contexts/CalibrationProvider'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,6 @@ export default function ActivityWarningModal({
   onForceExit,
 }: ActivityWarningModalProps) {
   const [countdown, setCountdown] = useState(0)
-  const { setUserActive } = useCalibration()
   const continueButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -65,7 +64,6 @@ export default function ActivityWarningModal({
   }, [isOpen])
 
   const handleContinue = () => {
-    setUserActive()
     onClose()
   }
 

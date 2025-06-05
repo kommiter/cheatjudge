@@ -1,0 +1,65 @@
+/* 캘리브레이션 영역 */
+.calibration-area {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 200px);
+  min-height: 400px;
+}
+
+/* 캘리브레이션 포인트 스타일 */
+.calibration-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.calibration-point.active {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.calibration-point-label {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 동적으로 설정되는 포인트 위치 */
+.point-1 {
+  left: 10%;
+  top: 10%;
+}
+.point-2 {
+  left: 50%;
+  top: 10%;
+}
+.point-3 {
+  left: 90%;
+  top: 10%;
+}
+.point-4 {
+  left: 10%;
+  top: 50%;
+}
+.point-5 {
+  left: 50%;
+  top: 50%;
+}
+.point-6 {
+  left: 90%;
+  top: 50%;
+}
+.point-7 {
+  left: 10%;
+  top: 90%;
+}
+.point-8 {
+  left: 50%;
+  top: 90%;
+}
+.point-9 {
+  left: 90%;
+  top: 90%;
+}
