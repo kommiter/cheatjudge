@@ -6,6 +6,7 @@ interface UserActivity {
   warningLevel: number
   lastActiveTime: number
   gazeOutOfBounds: number
+  isModalShown: boolean
 }
 
 interface CalibrationContextType {
@@ -15,6 +16,7 @@ interface CalibrationContextType {
   currentGaze: WebGazerData | null
   setCalibrated: () => void
   resetCalibration: () => void
+  resetModalState: () => void
   initializeWebGazer: () => Promise<boolean>
   startGazeTracking: () => void
   stopGazeTracking: () => void
@@ -32,6 +34,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     warningLevel: 0,
     lastActiveTime: Date.now(),
     gazeOutOfBounds: 0,
+    isModalShown: false,
   })
 
   // WebGazer 초기화
@@ -103,20 +106,24 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
         newActivity.gazeOutOfBounds += 1
 
         // 경고 레벨 계산
-        if (newActivity.gazeOutOfBounds > 100) {
+        if (newActivity.gazeOutOfBounds > 80 * 20 * 3) {
           newActivity.warningLevel = 3 // 강제 종료
-        } else if (newActivity.gazeOutOfBounds > 50) {
+          newActivity.isModalShown = true
+        } else if (newActivity.gazeOutOfBounds > 80 * 20) {
           newActivity.warningLevel = 2 // 심각한 경고
-        } else if (newActivity.gazeOutOfBounds > 20) {
+          newActivity.isModalShown = true
+        } else if (newActivity.gazeOutOfBounds > 80) {
           newActivity.warningLevel = 1 // 일반 경고
+          newActivity.isModalShown = true
         }
       } else {
-        // 화면 내부에 시선이 있으면 카운터 리셋
+        // 화면 내부에 시선이 있으면 카운터 리셋하지만 모달이 표시된 상태라면 경고 레벨 유지
         newActivity.gazeOutOfBounds = Math.max(
           0,
           newActivity.gazeOutOfBounds - 1,
         )
-        if (newActivity.gazeOutOfBounds < 20) {
+        // 모달이 표시되지 않은 상태에서만 경고 레벨을 0으로 리셋
+        if (newActivity.gazeOutOfBounds < 20 && !newActivity.isModalShown) {
           newActivity.warningLevel = 0
         }
       }
@@ -129,6 +136,14 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     setIsCalibrated(true)
   }
 
+  const resetModalState = () => {
+    setUserActivity((prev) => ({
+      ...prev,
+      warningLevel: 0,
+      isModalShown: false,
+    }))
+  }
+
   const resetCalibration = () => {
     setIsCalibrated(false)
     stopGazeTracking()
@@ -139,6 +154,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
       warningLevel: 0,
       lastActiveTime: Date.now(),
       gazeOutOfBounds: 0,
+      isModalShown: false,
     })
   }
 
@@ -156,6 +172,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
         currentGaze,
         setCalibrated,
         resetCalibration,
+        resetModalState,
         initializeWebGazer,
         startGazeTracking,
         stopGazeTracking,

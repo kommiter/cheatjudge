@@ -10,6 +10,7 @@ export default function UserLayout() {
     isWebGazerReady,
     userActivity,
     resetCalibration,
+    resetModalState,
     startGazeTracking,
   } = useCalibration()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -30,6 +31,7 @@ export default function UserLayout() {
 
   const handleModalClose = () => {
     setIsModalOpen(false)
+    resetModalState()
   }
 
   const handleForceExit = useCallback(() => {
@@ -39,7 +41,11 @@ export default function UserLayout() {
 
   // 사용자 활동 모니터링
   useEffect(() => {
-    if (userActivity.warningLevel > 0 && !isModalOpen) {
+    if (
+      userActivity.warningLevel > 0 &&
+      userActivity.isModalShown &&
+      !isModalOpen
+    ) {
       setIsModalOpen(true)
     }
 
@@ -47,7 +53,12 @@ export default function UserLayout() {
     if (userActivity.warningLevel >= 3) {
       handleForceExit()
     }
-  }, [userActivity.warningLevel, isModalOpen, handleForceExit])
+  }, [
+    userActivity.warningLevel,
+    userActivity.isModalShown,
+    isModalOpen,
+    handleForceExit,
+  ])
 
   if (!isCalibrated) {
     return null

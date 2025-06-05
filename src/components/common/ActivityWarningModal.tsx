@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 import {
   AlertDialog,
@@ -24,34 +24,7 @@ export default function ActivityWarningModal({
   onClose,
   onForceExit,
 }: ActivityWarningModalProps) {
-  const [countdown, setCountdown] = useState(0)
   const continueButtonRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    // 경고 레벨에 따른 카운트다운 설정
-    const countdownTime = warningLevel === 1 ? 30 : warningLevel === 2 ? 120 : 0
-    setCountdown(countdownTime)
-
-    if (countdownTime > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            if (warningLevel === 2) {
-              onForceExit()
-            }
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-
-      return () => {
-        clearInterval(timer)
-      }
-    }
-  }, [isOpen, warningLevel, onForceExit])
 
   // 모달이 열릴 때 버튼에 포커스
   useEffect(() => {
@@ -113,17 +86,6 @@ export default function ActivityWarningModal({
     }
   }
 
-  const getCountdownColor = () => {
-    switch (warningLevel) {
-      case 1:
-        return 'text-yellow-600'
-      case 2:
-        return 'text-orange-600'
-      default:
-        return 'text-gray-600'
-    }
-  }
-
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="max-w-md">
@@ -155,19 +117,6 @@ export default function ActivityWarningModal({
           <AlertDialogDescription className="text-center text-gray-600">
             {message}
           </AlertDialogDescription>
-
-          {/* 카운트다운 표시 */}
-          {countdown > 0 && (
-            <div className="mt-6">
-              <div className={`text-2xl font-bold ${getCountdownColor()}`}>
-                {Math.floor(countdown / 60)}:
-                {(countdown % 60).toString().padStart(2, '0')}
-              </div>
-              <div className="text-sm text-gray-500 mt-1">
-                {warningLevel === 1 ? '다음 경고까지' : '자동 종료까지'}
-              </div>
-            </div>
-          )}
         </div>
 
         <AlertDialogFooter className="flex gap-2 justify-center">
