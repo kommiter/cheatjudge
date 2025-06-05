@@ -1,398 +1,150 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import webgazer from 'webgazer'
+
+import type { CalibrationPoint } from '@/types/webgazer'
 import { useCalibration } from '@/contexts/CalibrationProvider'
-
-interface CalibrationPoint {
-  id: number
-  x: number
-  y: number
-  samples: number
-}
-
-const TOTAL_SAMPLES = process.env.NODE_ENV === 'development' ? 1 : 3
-const CARD_HORIZONTAL_PADDING = 32
+import {
+  POINT_POSITION_CLASSES,
+  CALIBRATION_POINTS,
+  CALIBRATION_COMPLETE_DELAY,
+} from '@/constants/calibration'
+import { cn } from '@/lib/utils'
+import { PATH } from '@/routes'
 
 export default function Calibration() {
   const navigate = useNavigate()
-  const { setCalibrated, updateGazeData } = useCalibration()
-  const [prediction, setPrediction] = useState<{ x: number; y: number } | null>(
-    null,
-  )
+  const { isWebGazerReady, setCalibrated, initializeWebGazer } =
+    useCalibration()
 
-  // DOM 요소 캐싱
-  const overlayRef = useRef<HTMLElement | null>(null)
+  const [isCalibrating, setIsCalibrating] = useState(false)
+  const [currentPointIndex, setCurrentPointIndex] = useState(0)
+  const [isCompleted, setIsCompleted] = useState(false)
 
-  // 초기 포인트 배열을 useMemo로 최적화
-  const initialPoints = useMemo(
-    () => [
-      { id: 1, x: 5, y: 5, samples: 0 },
-      { id: 2, x: 50, y: 5, samples: 0 },
-      { id: 3, x: 95, y: 5, samples: 0 },
-      { id: 4, x: 5, y: 50, samples: 0 },
-      { id: 5, x: 50, y: 50, samples: 0 },
-      { id: 6, x: 95, y: 50, samples: 0 },
-      { id: 7, x: 5, y: 95, samples: 0 },
-      { id: 8, x: 50, y: 95, samples: 0 },
-      { id: 9, x: 95, y: 95, samples: 0 },
-    ],
-    [],
-  )
-
-  // 포인트 상태를 초기화
-  const [points, setPoints] = useState<CalibrationPoint[]>(initialPoints)
-  const [currentIdx, setCurrentIdx] = useState(0)
-  const [isCalibrated, setIsCalibrated] = useState(false)
-  const [countdown, setCountdown] = useState(5)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [isTrained, setIsTrained] = useState(false)
-
+  // WebGazer 초기화 상태 확인 및 자동 캘리브레이션 시작
   useEffect(() => {
-    document.documentElement.classList.add('overflow-hidden', 'h-screen')
-    document.body.classList.add('overflow-hidden', 'h-screen', 'm-0')
-
-    return () => {
-      document.documentElement.classList.remove('overflow-hidden', 'h-screen')
-      document.body.classList.remove('overflow-hidden', 'h-screen', 'm-0')
-    }
-  }, [])
-
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [countdown])
-
-  // updateOverlayPosition 함수를 useCallback으로 최적화
-  const updateOverlayPosition = useCallback(() => {
-    const card = cardRef.current
-    if (!overlayRef.current) {
-      overlayRef.current = document.querySelector(
-        '.webgazerFaceOverlay',
-      ) as HTMLElement
-    }
-    const overlay = overlayRef.current
-    if (card && overlay) {
-      const cardRect = card.getBoundingClientRect()
-      overlay.style.position = 'fixed'
-      overlay.style.left = `${cardRect.left + CARD_HORIZONTAL_PADDING}px`
-      overlay.style.top = `${cardRect.top + 100}px`
-      overlay.style.width = `340px`
-      overlay.style.height = `260px`
-      overlay.style.pointerEvents = 'none'
-      overlay.style.zIndex = '1'
-      overlay.style.background = 'transparent'
-      overlay.style.display = 'block'
-    }
-  }, [])
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout
-
-    const handleUpdate = () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      timeoutId = setTimeout(updateOverlayPosition, 100)
-    }
-
-    // 초기 실행
-    handleUpdate()
-
-    window.addEventListener('resize', handleUpdate)
-    window.addEventListener('scroll', handleUpdate)
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      window.removeEventListener('resize', handleUpdate)
-      window.removeEventListener('scroll', handleUpdate)
-    }
-  }, [updateOverlayPosition])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !window.webgazer) {
-      window.webgazer = webgazer
-    }
-
-    let isInitialized = false
-    let isCleanedUp = false
-
-    const initializeWebgazer = async () => {
-      if (isInitialized || isCleanedUp) return
-      isInitialized = true
-
-      try {
-        // 기존 webgazer가 있다면 먼저 정리
-        if (window.webgazer && typeof window.webgazer.end === 'function') {
-          try {
-            await window.webgazer.end()
-          } catch (e) {
-            console.warn('Previous webgazer cleanup warning:', e)
-          }
+    if (isWebGazerReady && !isCalibrating && !isCompleted) {
+      // WebGazer가 준비되면 자동으로 캘리브레이션 시작
+      setIsCalibrating(true)
+      setCurrentPointIndex(0)
+    } else if (!isWebGazerReady) {
+      initializeWebGazer().then((success) => {
+        if (!success) {
+          console.error('웹캠 초기화에 실패했습니다.')
         }
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWebGazerReady, isCalibrating, isCompleted])
 
-        await webgazer.clearData()
-        await webgazer.begin()
-        await webgazer.setGazeListener(() => {})
-        await webgazer.setRegression('ridge')
-        await webgazer.setTracker('TFFacemesh')
-        await webgazer.showVideo(true)
-        await webgazer.showPredictionPoints(true)
-        await webgazer.saveDataAcrossSessions(false)
-      } catch (error) {
-        console.error('Webgazer 초기화 실패:', error)
-        isInitialized = false
-      }
+  const clickCalibrationPoint = (point: CalibrationPoint, index: number) => {
+    if (!isCalibrating || index !== currentPointIndex) return
+
+    // WebGazer에 캘리브레이션 포인트 추가
+    const screenX = (window.innerWidth * point.x) / 100
+    const screenY = (window.innerHeight * point.y) / 100
+
+    if (window.webgazer) {
+      window.webgazer.recordScreenPosition(screenX, screenY, 'click')
     }
 
-    initializeWebgazer()
+    // 다음 포인트로 이동
+    if (currentPointIndex < CALIBRATION_POINTS.length - 1) {
+      const nextIndex = currentPointIndex + 1
+      setCurrentPointIndex(nextIndex)
+    } else {
+      // 캘리브레이션 완료
+      setIsCalibrating(false)
+      setIsCompleted(true)
+      setCalibrated() // CalibrationProvider에 캘리브레이션 완료 알림
 
-    return () => {
-      isCleanedUp = true
-      isInitialized = false
-
-      // webgazer 정리
-      if (window.webgazer && !isCleanedUp) {
-        try {
-          if (typeof webgazer.setGazeListener === 'function') {
-            webgazer.setGazeListener(null)
-          }
-          // 비디오는 숨기지만 webgazer는 유지
-          if (typeof webgazer.showPredictionPoints === 'function') {
-            webgazer.showPredictionPoints(false)
-          }
-        } catch (error) {
-          console.error('Webgazer 정리 실패:', error)
-        }
-      }
-    }
-  }, [])
-
-  const handlePointClick = useCallback(
-    (event: React.MouseEvent, idx: number) => {
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (idx !== currentIdx || isCalibrated) return
-      // console.log('Clicked point', idx)
-      const x = (window.innerWidth * points[idx].x) / 100
-      const y = (window.innerHeight * points[idx].y) / 100
-      if (window.webgazer && window.webgazer.recordScreenPosition) {
-        window.webgazer.recordScreenPosition(x, y, 'click')
-      }
-      setPoints((prev) =>
-        prev.map((p, i) => (i === idx ? { ...p, samples: p.samples + 1 } : p)),
-      )
-    },
-    [currentIdx, isCalibrated, points],
-  )
-
-  useEffect(() => {
-    const curr = points[currentIdx]
-    if (!curr) return
-    if (curr.samples >= TOTAL_SAMPLES) {
+      // 3초 후 홈으로 자동 이동
       setTimeout(() => {
-        if (currentIdx < points.length - 1) setCurrentIdx(currentIdx + 1)
-        else setIsCalibrated(true)
-      }, 150)
-    }
-  }, [points, currentIdx])
-
-  const handleComplete = async () => {
-    if (!isCalibrated) return
-    try {
-      await webgazer.showVideo(true)
-      await webgazer.showPredictionPoints(false)
-      await webgazer.setGazeListener(() => {})
-      setCalibrated()
-      navigate('/', { replace: true })
-    } catch (error) {
-      console.error('Webgazer 활성화 실패:', error)
+        navigate(PATH.EXAM, { replace: true })
+      }, CALIBRATION_COMPLETE_DELAY)
     }
   }
 
-  const getCircleProgress = useCallback((samples: number) => {
-    const r = 18
-    const c = 2 * Math.PI * r
-    const pct = Math.min(samples / TOTAL_SAMPLES, 1)
-    return {
-      strokeDasharray: c,
-      strokeDashoffset: c * (1 - pct),
-    }
-  }, [])
-
-  useEffect(() => {
-    if (isCalibrated && !isTrained) {
-      setIsTrained(true)
-    }
-  }, [isCalibrated, isTrained])
-
-  useEffect(() => {
-    let rafId: number
-    let lastPrediction: { x: number; y: number } | null = null
-    let isActive = true // 컴포넌트 활성 상태 추적
-
-    if (!isTrained) {
-      setPrediction(null)
-      return
-    }
-
-    function loop() {
-      if (!isActive) return // 컴포넌트가 언마운트되면 루프 중단
-
-      const pred =
-        window.webgazer &&
-        window.webgazer.getCurrentPrediction &&
-        window.webgazer.getCurrentPrediction()
-      if (pred && pred.x && pred.y) {
-        setPrediction({ x: pred.x, y: pred.y })
-        lastPrediction = { x: pred.x, y: pred.y }
-        // provider로 시선 데이터 전달
-        updateGazeData(pred.x, pred.y)
-      } else if (lastPrediction) {
-        setPrediction(lastPrediction)
-      }
-
-      if (isActive) {
-        rafId = requestAnimationFrame(loop)
-      }
-    }
-
-    loop()
-
-    return () => {
-      isActive = false
-      if (rafId) {
-        cancelAnimationFrame(rafId)
-      }
-      // 시선 데이터 초기화
-      setPrediction(null)
-    }
-  }, [isTrained, updateGazeData])
-
-  // 컴포넌트 언마운트 시 전체 정리
-  useEffect(() => {
-    return () => {
-      // 모든 상태 초기화
-      setPoints(initialPoints)
-      setCurrentIdx(0)
-      setIsCalibrated(false)
-      setCountdown(5)
-      setIsTrained(false)
-      setPrediction(null)
-
-      // DOM 클래스 정리
-      document.documentElement.classList.remove('overflow-hidden', 'h-screen')
-      document.body.classList.remove('overflow-hidden', 'h-screen', 'm-0')
-
-      // overlay 참조 초기화
-      overlayRef.current = null
-    }
-  }, [initialPoints])
-
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-slate-50 relative overflow-hidden m-0 p-0">
-      {countdown > 0 ? (
-        <div className="fixed inset-0 w-screen h-screen flex items-center justify-center bg-white text-lg text-gray-600 font-normal">
-          {countdown}초 후 캘리브레이션이 시작됩니다
-        </div>
-      ) : (
-        <>
-          <div className="fixed inset-0 z-[99999] pointer-events-auto">
-            {!isCalibrated
-              ? points.map((point, idx) => (
-                  <div
-                    key={point.id}
-                    onClick={(e) => handlePointClick(e, idx)}
-                    onDoubleClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                    }}
-                    className={`absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center select-none transition-opacity duration-300 z-[99999]
-                      ${
-                        idx === currentIdx
-                          ? 'cursor-pointer opacity-100 pointer-events-auto animate-pulse'
-                          : 'opacity-30 pointer-events-none'
-                      }`}
-                    style={{
-                      left: `${point.x}vw`,
-                      top: `${point.y}vh`,
-                    }}
-                  >
-                    <svg width={48} height={48} pointerEvents="none">
-                      <circle
-                        cx={24}
-                        cy={24}
-                        r={18}
-                        stroke="#bbb"
-                        strokeWidth={6}
-                        fill="#f4f4f4"
-                      />
-                      <circle
-                        cx={24}
-                        cy={24}
-                        r={18}
-                        stroke="#16a34a"
-                        strokeWidth={6}
-                        fill="none"
-                        style={{
-                          transition: 'stroke-dashoffset 0.3s',
-                          strokeDasharray: getCircleProgress(point.samples)
-                            .strokeDasharray,
-                          strokeDashoffset: getCircleProgress(point.samples)
-                            .strokeDashoffset,
-                          strokeLinecap: 'round',
-                        }}
-                        transform="rotate(-90 24 24)"
-                      />
-                      <text
-                        x={24}
-                        y={29}
-                        textAnchor="middle"
-                        fontSize={idx === currentIdx ? 17 : 16}
-                        fontWeight="bold"
-                        fill={idx === currentIdx ? '#16a34a' : '#bbb'}
-                      >
-                        {point.id}
-                      </text>
-                    </svg>
-                  </div>
-                ))
-              : prediction &&
-                !isTrained && (
-                  <div
-                    className="absolute w-7 h-7 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2 z-[99999] shadow-[0_0_20px_4px_rgba(255,0,0,0.67)]"
-                    style={{
-                      left: prediction.x,
-                      top: prediction.y,
-                    }}
-                  />
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* 캘리브레이션 포인트들 */}
+      {(isCalibrating || isWebGazerReady) && (
+        <div className="fixed top-0 left-0 w-screen h-screen z-[1]">
+          {CALIBRATION_POINTS.map((point, index) => {
+            const isActive = isCalibrating && index === currentPointIndex
+            const isPointCompleted = isCalibrating && index < currentPointIndex
+
+            return (
+              <div
+                key={point.id}
+                className={cn(
+                  'absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 ease-in-out z-20',
+                  POINT_POSITION_CLASSES[
+                    point.id as keyof typeof POINT_POSITION_CLASSES
+                  ],
+                  isActive && 'scale-125',
                 )}
-            {isCalibrated && (
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[99999] pointer-events-auto">
-                <button
-                  type="button"
-                  onClick={handleComplete}
-                  className="w-[180px] h-[48px] bg-green-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-all duration-200 ease-in-out outline-none select-none active:scale-98 active:bg-green-700"
+                onClick={() => clickCalibrationPoint(point, index)}
+              >
+                <div
+                  className={cn(
+                    'w-10 h-10 rounded-full border-3 flex items-center justify-center font-bold text-white text-sm',
+                    {
+                      'bg-green-500 border-green-600': isPointCompleted,
+                      'bg-red-500 border-red-600 shadow-lg animate-pulse':
+                        isActive,
+                      'bg-gray-400 border-gray-500':
+                        isCalibrating && !isActive && !isPointCompleted,
+                      'bg-blue-400 border-blue-500 opacity-50': !isCalibrating,
+                    },
+                  )}
                 >
-                  시험 시작
-                </button>
+                  {index + 1}
+                </div>
               </div>
-            )}
-          </div>
-          <div
-            ref={cardRef}
-            className="flex flex-col items-center bg-white border rounded-lg shadow-lg fixed inset-0 w-screen h-screen p-8 box-border justify-center z-10"
-          >
-            <h1 className="mb-4 text-2xl font-bold text-center">
-              시선 캘리브레이션
-            </h1>
-            <p className="mb-8 text-center text-gray-700">
-              {isCalibrated
-                ? '캘리브레이션이 완료되었습니다! 준비되시면 시험을 시작해주세요.'
-                : '각 점을 순서대로 클릭해 초록색 원이 모두 차오를 때까지 진행해주세요.'}
+            )
+          })}
+        </div>
+      )}
+
+      {/* 초기화 텍스트 - 화면 중앙에 표시 */}
+      {!isWebGazerReady && !isCalibrating && !isCompleted && (
+        <div className="fixed inset-0 flex items-center justify-center z-[10]">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              웹캠 초기화 중...
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              브라우저에서 카메라 권한을 허용해주세요. 시선 추적 캘리브레이션을
+              위해 웹캠이 필요합니다.
             </p>
           </div>
-        </>
+        </div>
+      )}
+
+      {isCompleted && (
+        <div className="fixed inset-0 bg-gray-50 flex items-center justify-center z-[30]">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-green-600 mb-4">
+              캘리브레이션 완료!
+            </h2>
+            <p className="text-gray-600 mb-6">
+              시선 추적 캘리브레이션이 성공적으로 완료되었습니다. 잠시 후 시험
+              화면으로 이동합니다.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 캘리브레이션 중일 때만 상단에 간단한 안내 표시 */}
+      {isCalibrating && (
+        <div className="fixed top-40 left-1/2 -translate-x-1/2 z-[15] text-center">
+          <h2 className="text-xl font-bold text-gray-800 mb-1">
+            빨간 원을 순서대로 클릭하세요
+          </h2>
+          <p className="text-sm text-gray-600">
+            각 점을 클릭할 때 화면을 정확히 응시해주세요
+          </p>
+        </div>
       )}
     </div>
   )
