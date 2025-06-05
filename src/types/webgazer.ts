@@ -28,7 +28,7 @@ export interface WebGazer {
    * @param callback 시선 데이터를 받을 콜백 함수
    */
   setGazeListener: (
-    callback: ((data: WebGazerData | null, elapsedTime: number) => void) | null,
+    callback: ((data: WebGazerData | null) => void) | null,
   ) => WebGazer
 
   /**
@@ -45,14 +45,6 @@ export interface WebGazer {
    * 웹캠 비디오 요소 가져오기
    */
   getVideoElement: () => HTMLVideoElement | null
-
-  /**
-   * 캘리브레이션 포인트 추가
-   * @param x X 좌표
-   * @param y Y 좌표
-   * @param active 활성 상태
-   */
-  watchListener: (x: number, y: number, active: boolean) => void
 
   /**
    * 캘리브레이션 데이터 초기화
