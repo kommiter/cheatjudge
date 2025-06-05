@@ -102,8 +102,6 @@ export interface CalibrationPoint {
   x: number
   /** Y 좌표 (퍼센트) */
   y: number
-  /** 포인트 라벨 */
-  label: string
 }
 
 export interface CalibrationState {

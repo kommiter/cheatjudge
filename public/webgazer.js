@@ -7251,13 +7251,11 @@ var webgazer
                 let l
                 ;(o.onsuccess = () => {
                   l = r.transaction(ba, 'readwrite')
-                  const o = l
-                    .objectStore(ba)
-                    .put({
-                      modelPath: this.modelPath,
-                      modelArtifacts: t,
-                      modelArtifactsInfo: s,
-                    })
+                  const o = l.objectStore(ba).put({
+                    modelPath: this.modelPath,
+                    modelArtifacts: t,
+                    modelArtifactsInfo: s,
+                  })
                   ;(o.onsuccess = () => e({ modelArtifactsInfo: s })),
                     (o.onerror = (e) => {
                       i = a.objectStore(xa)
@@ -17850,18 +17848,14 @@ var webgazer
       async setWeights(e) {
         const t = (e = await this.extractIterations(e)).length / 2,
           n = !1
-        ;(this.accumulatedGrads = e
-          .slice(0, t)
-          .map((e) => ({
+        ;(this.accumulatedGrads = e.slice(0, t).map((e) => ({
+          originalName: e.name,
+          variable: e.tensor.variable(n),
+        }))),
+          (this.accumulatedUpdates = e.slice(t, 2 * t).map((e) => ({
             originalName: e.name,
             variable: e.tensor.variable(n),
-          }))),
-          (this.accumulatedUpdates = e
-            .slice(t, 2 * t)
-            .map((e) => ({
-              originalName: e.name,
-              variable: e.tensor.variable(n),
-            })))
+          })))
       }
       getConfig() {
         return {
@@ -18051,18 +18045,14 @@ var webgazer
           })
         const t = e.length / 2,
           n = !1
-        ;(this.accumulatedFirstMoment = e
-          .slice(0, t)
-          .map((e) => ({
+        ;(this.accumulatedFirstMoment = e.slice(0, t).map((e) => ({
+          originalName: e.name,
+          variable: e.tensor.variable(n),
+        }))),
+          (this.accumulatedSecondMoment = e.slice(t, 2 * t).map((e) => ({
             originalName: e.name,
             variable: e.tensor.variable(n),
-          }))),
-          (this.accumulatedSecondMoment = e
-            .slice(t, 2 * t)
-            .map((e) => ({
-              originalName: e.name,
-              variable: e.tensor.variable(n),
-            })))
+          })))
       }
       getConfig() {
         return {
@@ -18424,25 +18414,19 @@ var webgazer
         e = await this.extractIterations(e)
         const t = this.centered ? e.length / 3 : e.length / 2,
           n = !1
-        ;(this.accumulatedMeanSquares = e
-          .slice(0, t)
-          .map((e) => ({
+        ;(this.accumulatedMeanSquares = e.slice(0, t).map((e) => ({
+          originalName: e.name,
+          variable: e.tensor.variable(n),
+        }))),
+          (this.accumulatedMoments = e.slice(t, 2 * t).map((e) => ({
             originalName: e.name,
             variable: e.tensor.variable(n),
           }))),
-          (this.accumulatedMoments = e
-            .slice(t, 2 * t)
-            .map((e) => ({
+          this.centered &&
+            (this.accumulatedMeanGrads = e.slice(2 * t, 3 * t).map((e) => ({
               originalName: e.name,
               variable: e.tensor.variable(n),
-            }))),
-          this.centered &&
-            (this.accumulatedMeanGrads = e
-              .slice(2 * t, 3 * t)
-              .map((e) => ({
-                originalName: e.name,
-                variable: e.tensor.variable(n),
-              })))
+            })))
       }
       getConfig() {
         return {
@@ -20851,23 +20835,24 @@ var webgazer
       Cm,
       { kernelName: ks, gradFunc: (e) => ({ x: () => Nl(e) }) },
     ]
-    for (const e of $m) Ls(e)
-    /**
-     * @license
-     * Copyright 2020 Google LLC. All Rights Reserved.
-     * Licensed under the Apache License, Version 2.0 (the "License");
-     * you may not use this file except in compliance with the License.
-     * You may obtain a copy of the License at
-     *
-     * http://www.apache.org/licenses/LICENSE-2.0
-     *
-     * Unless required by applicable law or agreed to in writing, software
-     * distributed under the License is distributed on an "AS IS" BASIS,
-     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     * See the License for the specific language governing permissions and
-     * limitations under the License.
-     * =============================================================================
-     */
+    for (const e of $m)
+      Ls(e)
+      /**
+       * @license
+       * Copyright 2020 Google LLC. All Rights Reserved.
+       * Licensed under the Apache License, Version 2.0 (the "License");
+       * you may not use this file except in compliance with the License.
+       * You may obtain a copy of the License at
+       *
+       * http://www.apache.org/licenses/LICENSE-2.0
+       *
+       * Unless required by applicable law or agreed to in writing, software
+       * distributed under the License is distributed on an "AS IS" BASIS,
+       * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       * See the License for the specific language governing permissions and
+       * limitations under the License.
+       * =============================================================================
+       */
     ;(yr().prototype.abs = function () {
       return this.throwIfDisposed(), ro(this)
     }),
@@ -64382,10 +64367,13 @@ var webgazer
       ;(tB = e),
         ((nB = document.createElement('div')).id = eB.params.videoContainerId),
         (nB.style.position = 'fixed'),
-        (nB.style.top = '0px'),
-        (nB.style.left = '0px'),
+        (nB.style.top = '10px'),
+        (nB.style.left = '10px'),
         (nB.style.width = eB.params.videoViewerWidth + 'px'),
         (nB.style.height = eB.params.videoViewerHeight + 'px'),
+        (nB.style.borderRadius = '12px'),
+        (nB.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'),
+        (nB.style.overflow = 'hidden'),
         LB(nB),
         (sB = document.createElement('video')).setAttribute('playsinline', ''),
         (sB.id = eB.params.videoElementId),
@@ -64394,6 +64382,7 @@ var webgazer
         (sB.style.position = 'absolute'),
         (sB.style.width = eB.params.videoViewerWidth + 'px'),
         (sB.style.height = eB.params.videoViewerHeight + 'px'),
+        (sB.style.borderRadius = '12px'),
         LB(sB),
         ((rB = document.createElement('canvas')).id =
           eB.params.videoElementCanvasId),
@@ -64401,6 +64390,7 @@ var webgazer
         ((aB = document.createElement('canvas')).id = eB.params.faceOverlayId),
         (aB.style.display = eB.params.showFaceOverlay ? 'block' : 'none'),
         (aB.style.position = 'absolute'),
+        (aB.style.borderRadius = '12px'),
         eB.params.mirrorVideo &&
           (sB.style.setProperty('-moz-transform', 'scale(-1, 1)'),
           sB.style.setProperty('-webkit-transform', 'scale(-1, 1)'),
@@ -64417,6 +64407,7 @@ var webgazer
         (iB.style.display = eB.params.showFaceFeedbackBox ? 'block' : 'none'),
         (iB.style.border = 'solid'),
         (iB.style.position = 'absolute'),
+        (iB.style.borderRadius = '12px'),
         ((oB = document.createElement('div')).id = eB.params.gazeDotId),
         (oB.style.display = eB.params.showGazeDot ? 'block' : 'none'),
         (oB.style.position = 'fixed'),
