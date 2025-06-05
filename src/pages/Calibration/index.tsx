@@ -44,15 +44,7 @@ export default function Calibration() {
     const screenY = (window.innerHeight * point.y) / 100
 
     if (window.webgazer) {
-      ;(
-        window.webgazer as unknown as {
-          recordScreenPosition: (
-            x: number,
-            y: number,
-            eventType?: string,
-          ) => void
-        }
-      ).recordScreenPosition(screenX, screenY, 'click')
+      window.webgazer.recordScreenPosition(screenX, screenY, 'click')
     }
 
     // 다음 포인트로 이동

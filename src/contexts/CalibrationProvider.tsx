@@ -87,7 +87,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
   // 시선 추적 중지
   function stopGazeTracking() {
     if (!window.webgazer) return
-    window.webgazer.setGazeListener(() => {})
+    window.webgazer.setGazeListener(null)
   }
 
   // 사용자 활동 업데이트

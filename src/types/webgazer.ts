@@ -28,7 +28,7 @@ export interface WebGazer {
    * @param callback 시선 데이터를 받을 콜백 함수
    */
   setGazeListener: (
-    callback: (data: WebGazerData | null, elapsedTime: number) => void,
+    callback: ((data: WebGazerData | null, elapsedTime: number) => void) | null,
   ) => WebGazer
 
   /**
@@ -87,6 +87,14 @@ export interface WebGazer {
    * @param show 표시 여부
    */
   showFaceFeedbackBox: (show: boolean) => WebGazer
+
+  /**
+   * 화면 위치 기록 (캘리브레이션용)
+   * @param x X 좌표 (픽셀)
+   * @param y Y 좌표 (픽셀)
+   * @param eventType 이벤트 타입 ('click', 'move' 등)
+   */
+  recordScreenPosition: (x: number, y: number, eventType?: string) => void
 }
 
 declare global {
