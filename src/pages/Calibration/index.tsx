@@ -13,8 +13,12 @@ import { PATH } from '@/routes'
 
 export default function Calibration() {
   const navigate = useNavigate()
-  const { isWebGazerReady, setCalibrated, initializeWebGazer } =
-    useCalibration()
+  const {
+    isWebGazerReady,
+    setCalibrated,
+    initializeWebGazer,
+    togglePredictionPoints,
+  } = useCalibration()
 
   const [isCalibrating, setIsCalibrating] = useState(false)
   const [currentPointIndex, setCurrentPointIndex] = useState(0)
@@ -55,11 +59,12 @@ export default function Calibration() {
       // 캘리브레이션 완료
       setIsCalibrating(false)
       setIsCompleted(true)
-      setCalibrated() // CalibrationProvider에 캘리브레이션 완료 알림
+      setCalibrated()
 
       // 3초 후 홈으로 자동 이동
       setTimeout(() => {
         navigate(PATH.EXAM, { replace: true })
+        togglePredictionPoints()
       }, CALIBRATION_COMPLETE_DELAY)
     }
   }
