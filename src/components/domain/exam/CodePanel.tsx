@@ -23,7 +23,7 @@ export const CodePanel = ({
 }: CodePanelProps) => {
   return (
     <div className="flex flex-col">
-      <div className="flex-1 border-b bg-muted p-4 rounded-lg">
+      <div className="flex-1 border-b bg-muted p-4">
         <CodeEditor initialCode={code} onChange={onCodeChange} />
       </div>
 

@@ -20,12 +20,5 @@ export interface ExamData {
   problems: Problem[]
 }
 
-export interface Submission {
-  id: number
-  submittedAt: string
-  language: string
-  status: 'correct' | 'wrong' | 'compile_error' | 'runtime_error' | 'time_limit'
-}
-
 export type NavigationDirection = 'prev' | 'next'
 export type ProgrammingLanguage = 'c' | 'cpp' | 'java' | 'python' | 'javascript'

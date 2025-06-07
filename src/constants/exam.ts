@@ -1,4 +1,4 @@
-import { TestResult, ExamData, Submission } from '@/types/exam'
+import { TestResult, ExamData } from '@/types/exam'
 
 export const INITIAL_EXAM_TIME = 30 * 60 // 30분을 초 단위로
 
@@ -57,24 +57,3 @@ export const PROGRAMMING_LANGUAGES = [
   { value: 'python', label: 'Python' },
   { value: 'javascript', label: 'JavaScript' },
 ] as const
-
-export const MOCK_SUBMISSIONS: Submission[] = [
-  {
-    id: 3,
-    submittedAt: '2025-03-19 14:32:45',
-    language: 'C++',
-    status: 'wrong' as const,
-  },
-  {
-    id: 2,
-    submittedAt: '2025-03-19 14:30:12',
-    language: 'C++',
-    status: 'compile_error' as const,
-  },
-  {
-    id: 1,
-    submittedAt: '2025-03-19 14:25:33',
-    language: 'C++',
-    status: 'wrong' as const,
-  },
-]
