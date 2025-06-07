@@ -1,4 +1,4 @@
-import { Play, Clock } from 'lucide-react'
+import { Play, Clock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button.tsx'
 import {
   Select,
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select.tsx'
 import { formatTime } from '@/utils/exam.ts'
 import { useExamTimer } from '@/hooks/useExamTimer'
+import { useCalibration } from '@/contexts/CalibrationProvider'
 import { INITIAL_EXAM_TIME } from '@/constants/exam'
 import type { Problem } from '@/types/exam.ts'
 
@@ -31,6 +32,7 @@ export const ExamHeader = ({
   onSubmit,
 }: ExamHeaderProps) => {
   const { remainingTime } = useExamTimer(INITIAL_EXAM_TIME)
+  const { isPredictionPointsVisible, togglePredictionPoints } = useCalibration()
 
   return (
     <header className="flex items-center justify-between border-b px-4 py-2">
@@ -46,6 +48,22 @@ export const ExamHeader = ({
           <Clock className="h-4 w-4" />
           <span>남은 시간: {formatTime(remainingTime)}</span>
         </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={togglePredictionPoints}
+          title={
+            isPredictionPointsVisible
+              ? '시선 포인터 숨기기'
+              : '시선 포인터 보이기'
+          }
+        >
+          {isPredictionPointsVisible ? (
+            <Eye className="h-4 w-4 text-red-500" />
+          ) : (
+            <EyeOff className="h-4 w-4" />
+          )}
+        </Button>
         <Select value={selectedLanguage} onValueChange={onLanguageChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="언어 선택" />
@@ -62,6 +80,7 @@ export const ExamHeader = ({
           <Play className="mr-2 h-4 w-4" />
           실행
         </Button>
+
         <Button onClick={onSubmit}>제출</Button>
       </div>
     </header>

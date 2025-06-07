@@ -14,12 +14,14 @@ interface CalibrationContextType {
   isWebGazerReady: boolean
   userActivity: UserActivity
   currentGaze: WebGazerData | null
+  isPredictionPointsVisible: boolean
   setCalibrated: () => void
   resetCalibration: () => void
   resetModalState: () => void
   initializeWebGazer: () => Promise<boolean>
   startGazeTracking: () => void
   stopGazeTracking: () => void
+  togglePredictionPoints: () => void
 }
 
 const CalibrationContext = createContext<CalibrationContextType | undefined>(
@@ -30,6 +32,8 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
   const [isCalibrated, setIsCalibrated] = useState(false)
   const [isWebGazerReady, setIsWebGazerReady] = useState(false)
   const [currentGaze, setCurrentGaze] = useState<WebGazerData | null>(null)
+  const [isPredictionPointsVisible, setIsPredictionPointsVisible] =
+    useState(true)
   const [userActivity, setUserActivity] = useState<UserActivity>({
     warningLevel: 0,
     lastActiveTime: Date.now(),
@@ -132,6 +136,15 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  // 예측 포인트 토글
+  function togglePredictionPoints() {
+    if (!window.webgazer || !isWebGazerReady) return
+
+    const newVisibility = !isPredictionPointsVisible
+    setIsPredictionPointsVisible(newVisibility)
+    window.webgazer.showPredictionPoints(newVisibility)
+  }
+
   function setCalibrated() {
     setIsCalibrated(true)
   }
@@ -165,12 +178,14 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
         isWebGazerReady,
         userActivity,
         currentGaze,
+        isPredictionPointsVisible,
         setCalibrated,
         resetCalibration,
         resetModalState,
         initializeWebGazer,
         startGazeTracking,
         stopGazeTracking,
+        togglePredictionPoints,
       }}
     >
       {children}

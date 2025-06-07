@@ -9,7 +9,6 @@ import {
   INITIAL_EXAM_DATA,
   INITIAL_CODE,
   MOCK_TEST_RESULTS,
-  MOCK_SUBMISSIONS,
 } from '@/constants/exam'
 
 export default function Exam() {
@@ -51,11 +50,11 @@ export default function Exam() {
         onGoToProblem={goToProblem}
       />
 
-      <div className="grid flex-1 grid-cols-2">
-        <ProblemPanel
-          currentProblem={currentProblem}
-          submissions={MOCK_SUBMISSIONS}
-        />
+      <div className="grid flex-1 grid-cols-2 divide-x border-t">
+        <div className="flex flex-col">
+          <div className="h-40 bg-gray-100" />
+          <ProblemPanel currentProblem={currentProblem} />
+        </div>
 
         <CodePanel
           code={code}
