@@ -12,7 +12,7 @@ interface ProblemPanelProps {
 
 export const ProblemPanel = ({ currentProblem }: ProblemPanelProps) => {
   return (
-    <div className="flex flex-col border-r">
+    <div className="flex flex-col">
       <Tabs defaultValue="problem" className="flex-1">
         <TabsList className="mx-4 mt-2 justify-start">
           <TabsTrigger value="problem">문제</TabsTrigger>

@@ -50,9 +50,9 @@ export default function Exam() {
         onGoToProblem={goToProblem}
       />
 
-      <div className="grid flex-1 grid-cols-2">
+      <div className="grid flex-1 grid-cols-2 divide-x border-t">
         <div className="flex flex-col">
-          <div className="h-40 bg-gray-100 border border-y-0" />
+          <div className="h-40 bg-gray-100" />
           <ProblemPanel currentProblem={currentProblem} />
         </div>
 

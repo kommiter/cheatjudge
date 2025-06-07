@@ -29,7 +29,7 @@ const CalibrationContext = createContext<CalibrationContextType | undefined>(
 )
 
 export function CalibrationProvider({ children }: { children: ReactNode }) {
-  const [isCalibrated, setIsCalibrated] = useState(true)
+  const [isCalibrated, setIsCalibrated] = useState(false)
   const [isWebGazerReady, setIsWebGazerReady] = useState(false)
   const [currentGaze, setCurrentGaze] = useState<WebGazerData | null>(null)
   const [isPredictionPointsVisible, setIsPredictionPointsVisible] =
