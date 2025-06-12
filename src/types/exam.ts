@@ -1,12 +1,3 @@
-export interface TestResult {
-  id: number
-  status: 'success' | 'error' | 'pending'
-  input: string
-  expectedOutput: string
-  actualOutput: string
-  time: string
-}
-
 export interface Problem {
   id: number
   title: string

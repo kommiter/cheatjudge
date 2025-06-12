@@ -10,14 +10,24 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable.tsx'
 import { CodeEditor } from '@/components/common/CodeEditor.tsx'
+import { OutputPanel } from './OutputPanel.tsx'
+import { SubmitCodeResponse } from '@/apis/types/submitCode'
 
 interface CodePanelProps {
   code: string
   output: string
   onCodeChange: (code: string) => void
+  isRunning?: boolean
+  submissionResult?: SubmitCodeResponse
 }
 
-export const CodePanel = ({ code, output, onCodeChange }: CodePanelProps) => {
+export const CodePanel = ({
+  code,
+  output,
+  onCodeChange,
+  isRunning = false,
+  submissionResult,
+}: CodePanelProps) => {
   return (
     <div className="h-full">
       <ResizablePanelGroup direction="vertical" className="h-full">
@@ -30,16 +40,23 @@ export const CodePanel = ({ code, output, onCodeChange }: CodePanelProps) => {
         <ResizableHandle withHandle />
 
         <ResizablePanel defaultSize={40} minSize={20}>
-          <div className="h-full">
-            <Tabs defaultValue="output" className="h-full">
-              <TabsList className="mx-4 mt-2 justify-start">
+          <div className="h-full flex flex-col">
+            <Tabs defaultValue="output" className="h-full flex flex-col">
+              <TabsList className="mx-4 mt-2 justify-start shrink-0">
                 <TabsTrigger value="output">실행 결과</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="output" className="h-full p-4">
-                <pre className="h-full rounded-md bg-muted p-4 font-mono text-sm overflow-auto">
-                  {output || '코드를 실행하면 결과가 여기에 표시됩니다.'}
-                </pre>
+              <TabsContent
+                value="output"
+                className="flex-1 p-4 pt-2 overflow-hidden"
+              >
+                <div className="h-full overflow-y-auto">
+                  <OutputPanel
+                    output={output}
+                    submissionResult={submissionResult}
+                    isRunning={isRunning}
+                  />
+                </div>
               </TabsContent>
             </Tabs>
           </div>
