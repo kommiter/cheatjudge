@@ -19,7 +19,6 @@ interface ExamHeaderProps {
   selectedLanguage: string
   onLanguageChange: (language: string) => void
   onRunCode: () => void
-  onSubmit: () => void
   currentProblem: Problem
 }
 
@@ -29,7 +28,6 @@ export const ExamHeader = ({
   selectedLanguage,
   onLanguageChange,
   onRunCode,
-  onSubmit,
 }: ExamHeaderProps) => {
   const { remainingTime } = useExamTimer(INITIAL_EXAM_TIME)
   const { isPredictionPointsVisible, togglePredictionPoints } = useCalibration()
@@ -76,12 +74,10 @@ export const ExamHeader = ({
             <SelectItem value="javascript">JavaScript</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={onRunCode}>
+        <Button variant="default" onClick={onRunCode}>
           <Play className="mr-2 h-4 w-4" />
           실행
         </Button>
-
-        <Button onClick={onSubmit}>제출</Button>
       </div>
     </header>
   )
