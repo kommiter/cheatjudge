@@ -4,32 +4,58 @@ import { ProblemNavigation } from '@/components/domain/exam/ProblemNavigation.ts
 import { ProblemPanel } from '@/components/domain/exam/ProblemPanel.tsx'
 import { CodePanel } from '@/components/domain/exam/CodePanel.tsx'
 import { useExamData } from '@/hooks/useExamData'
-import { useCodeExecution } from '@/hooks/useCodeExecution'
 import {
   INITIAL_EXAM_DATA,
   INITIAL_CODE,
-  MOCK_TEST_RESULTS,
+  MOCK_TEST_CASES,
 } from '@/constants/exam'
+import { useSubmitCodeMutation } from '@/queries/submitCode'
+import { SubmitCodeDto, SubmitCodeResponse } from '@/apis/types/submitCode'
 
 export default function Exam() {
   // 커스텀 훅
-  const {
-    examData,
-    currentProblem,
-    navigateToProblem,
-    goToProblem,
-    toggleProblemCompletion,
-  } = useExamData(INITIAL_EXAM_DATA)
-  const { output, runCode } = useCodeExecution()
+  const { examData, currentProblem, navigateToProblem, goToProblem } =
+    useExamData(INITIAL_EXAM_DATA)
 
   // 로컬 상태
   const [code, setCode] = useState(INITIAL_CODE)
   const [selectedLanguage, setSelectedLanguage] = useState('cpp')
-  const [testResults] = useState(MOCK_TEST_RESULTS)
+  const [output, setOutput] = useState('')
+  const [submissionResult, setSubmissionResult] = useState<
+    SubmitCodeResponse | undefined
+  >(undefined)
 
-  // 핸들러
-  const handleSubmit = () => {
-    toggleProblemCompletion(currentProblem.id)
+  // React Query Mutation
+  const submitCodeMutation = useSubmitCodeMutation({
+    onSuccess: (data) => {
+      setSubmissionResult(data)
+      setOutput('')
+    },
+    onError: (error) => {
+      setSubmissionResult(undefined)
+      setOutput(
+        `=== 오류 발생 ===\n${error.message || '알 수 없는 오류가 발생했습니다.'}`,
+      )
+    },
+  })
+
+  // 코드 실행 함수
+  const runCode = () => {
+    if (!code.trim()) {
+      setOutput('코드를 입력해주세요.')
+      setSubmissionResult(undefined)
+      return
+    }
+
+    const testCases = MOCK_TEST_CASES[currentProblem.id] || []
+    const submitData: SubmitCodeDto = {
+      code,
+      testCases,
+    }
+
+    setOutput('')
+    setSubmissionResult(undefined)
+    submitCodeMutation.mutate(submitData)
   }
 
   return (
@@ -40,8 +66,8 @@ export default function Exam() {
         selectedLanguage={selectedLanguage}
         onLanguageChange={setSelectedLanguage}
         onRunCode={runCode}
-        onSubmit={handleSubmit}
         currentProblem={currentProblem}
+        isRunning={submitCodeMutation.isPending}
       />
 
       <ProblemNavigation
@@ -59,8 +85,9 @@ export default function Exam() {
         <CodePanel
           code={code}
           output={output}
-          testResults={testResults}
           onCodeChange={setCode}
+          isRunning={submitCodeMutation.isPending}
+          submissionResult={submissionResult}
         />
       </div>
     </div>

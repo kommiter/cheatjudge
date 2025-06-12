@@ -1,12 +1,3 @@
-export interface TestResult {
-  id: number
-  status: 'success' | 'error' | 'pending'
-  input: string
-  expectedOutput: string
-  actualOutput: string
-  time: string
-}
-
 export interface Problem {
   id: number
   title: string
@@ -21,4 +12,4 @@ export interface ExamData {
 }
 
 export type NavigationDirection = 'prev' | 'next'
-export type ProgrammingLanguage = 'c' | 'cpp' | 'java' | 'python' | 'javascript'
+export type ProgrammingLanguage = 'cpp'

@@ -5,6 +5,8 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import APIError from '@/apis/APIError'
+import { getErrorMessage } from '@/constants/errorCode'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,7 +17,11 @@ const queryClient = new QueryClient({
   },
   mutationCache: new MutationCache({
     onError: (error) => {
-      toast.error(error.message || '요청에 실패햐였습니다.')
+      if (error instanceof APIError) {
+        toast.error(getErrorMessage(error.status) || '요청에 실패햐였습니다.')
+      } else {
+        toast.error('알 수 없는 에러가 발생했습니다.')
+      }
     },
   }),
 })
