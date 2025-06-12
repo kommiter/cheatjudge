@@ -21,4 +21,4 @@ export interface ExamData {
 }
 
 export type NavigationDirection = 'prev' | 'next'
-export type ProgrammingLanguage = 'c' | 'cpp' | 'java' | 'python' | 'javascript'
+export type ProgrammingLanguage = 'cpp'
