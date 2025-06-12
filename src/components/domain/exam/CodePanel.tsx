@@ -32,7 +32,7 @@ export const CodePanel = ({
     <div className="h-full">
       <ResizablePanelGroup direction="vertical" className="h-full">
         <ResizablePanel defaultSize={60} minSize={30}>
-          <div className="h-full border-b bg-muted p-4">
+          <div className="h-full border-b bg-[#282C34]">
             <CodeEditor initialCode={code} onChange={onCodeChange} />
           </div>
         </ResizablePanel>

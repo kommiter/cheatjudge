@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { EditorView, basicSetup } from 'codemirror'
 import { EditorState, Prec } from '@codemirror/state'
 import { cpp } from '@codemirror/lang-cpp'
+import { oneDark } from '@codemirror/theme-one-dark'
+import { autocompletion } from '@codemirror/autocomplete'
 import { cn } from '@/lib/utils.ts'
 import { toast } from 'sonner'
 import {
@@ -41,6 +43,8 @@ export function CodeEditor({
       extensions: [
         basicSetup,
         cpp(),
+        oneDark,
+        autocompletion(),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && onChange) {
             onChange(update.state.doc.toString())
@@ -105,7 +109,7 @@ export function CodeEditor({
         className={cn('h-full w-full overflow-auto', className)}
       />
       <AlertDialog open={isPasteAlertOpen} onOpenChange={setIsPasteAlertOpen}>
-        <AlertDialogContent /* 이전 onKeyDown 핸들러 제거 */>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>부정행위 감지</AlertDialogTitle>
             <AlertDialogDescription>
