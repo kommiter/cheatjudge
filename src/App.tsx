@@ -8,9 +8,9 @@ import MouseOutWarningModal from '@/components/common/MouseOutWarningModal'
 import './index.css'
 
 function App() {
-  const { shouldShowModal, closeModal } = useFullscreen()
+  const { shouldShowModal, closeModal, isFullscreenChanging } = useFullscreen()
   const { isMouseOutAlertOpen, setIsMouseOutAlertOpen } =
-    useAntiCheatDetection()
+    useAntiCheatDetection(isFullscreenChanging)
 
   return (
     <QueryProvider>
