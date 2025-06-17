@@ -50,7 +50,7 @@ export function CodeEditor({
             onChange(update.state.doc.toString())
           }
         }),
-        // Intercept paste events
+        // Intercept paste events and handle Tab key
         Prec.highest(
           EditorView.domEventHandlers({
             copy(event, view) {
@@ -72,6 +72,20 @@ export function CodeEditor({
               } else {
                 // Allow paste if it's internal, let CodeMirror handle it
               }
+            },
+            keydown(event, view) {
+              if (event.key === 'Tab') {
+                event.preventDefault()
+                const { from, to } = view.state.selection.main
+                const spaces = '  ' // 2칸 들여쓰기
+
+                view.dispatch({
+                  changes: { from, to, insert: spaces },
+                  selection: { anchor: from + spaces.length },
+                })
+                return true
+              }
+              return false
             },
           }),
         ),

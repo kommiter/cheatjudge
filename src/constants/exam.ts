@@ -6,10 +6,7 @@ export const INITIAL_CODE = `#include <iostream>
 using namespace std;
 
 int main() {
-    int a, b;
-    cin >> a >> b;
-    cout << a + b << endl;
-    return 0;
+  return 0;
 }`
 
 export const MOCK_EXAM_DATA: ExamData = {
