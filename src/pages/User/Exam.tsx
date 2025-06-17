@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExamHeader } from '@/components/domain/exam/ExamHeader.tsx'
 import { ProblemNavigation } from '@/components/domain/exam/ProblemNavigation.tsx'
 import { ProblemPanel } from '@/components/domain/exam/ProblemPanel.tsx'
@@ -38,6 +38,29 @@ export default function Exam() {
       )
     },
   })
+
+  // 5초마다 코드를 N8N으로 전송
+  useEffect(() => {
+    const sendCodeToN8N = async () => {
+      const n8nUrl = import.meta.env.VITE_N8N_URL
+      if (!n8nUrl || !code.trim()) return
+
+      try {
+        const url = new URL(n8nUrl)
+        url.searchParams.set('code', code)
+
+        await fetch(url.toString(), {
+          method: 'GET',
+        })
+      } catch (error) {
+        console.error('N8N으로 코드 전송 실패:', error)
+      }
+    }
+
+    const interval = setInterval(sendCodeToN8N, 5000)
+
+    return () => clearInterval(interval)
+  }, [code])
 
   // 코드 실행 함수
   const runCode = () => {
