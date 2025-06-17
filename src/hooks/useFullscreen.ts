@@ -4,10 +4,13 @@ export function useFullscreen() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [shouldShowModal, setShouldShowModal] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
+  const [isFullscreenChanging, setIsFullscreenChanging] = useState(false)
 
   // 전체화면 상태 변경 감지
   useEffect(() => {
     const handleFullscreenChange = () => {
+      setIsFullscreenChanging(true)
+
       const isCurrentlyFullscreen = Boolean(
         document.fullscreenElement ||
           document.webkitFullscreenElement ||
@@ -25,6 +28,11 @@ export function useFullscreen() {
           setShouldShowModal(false)
         }
       }
+
+      // 짧은 시간 후 변경 상태 해제
+      setTimeout(() => {
+        setIsFullscreenChanging(false)
+      }, 700)
     }
 
     // 초기 상태 확인 및 설정
@@ -102,5 +110,6 @@ export function useFullscreen() {
     shouldShowModal,
     enterFullscreen,
     closeModal,
+    isFullscreenChanging,
   }
 }

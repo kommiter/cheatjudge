@@ -72,6 +72,8 @@ export default function UserLayout() {
       <ActivityWarningModal
         isOpen={isModalOpen}
         warningLevel={userActivity.warningLevel}
+        faceOutOfBounds={userActivity.faceOutOfBounds}
+        gazeOutOfBounds={userActivity.gazeOutOfBounds}
         onClose={handleModalClose}
         onForceExit={handleForceExit}
       />

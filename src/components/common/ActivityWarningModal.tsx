@@ -14,6 +14,8 @@ import {
 interface ActivityWarningModalProps {
   isOpen: boolean
   warningLevel: number
+  faceOutOfBounds: number
+  gazeOutOfBounds: number
   onClose: () => void
   onForceExit: () => void
 }
@@ -21,6 +23,8 @@ interface ActivityWarningModalProps {
 export default function ActivityWarningModal({
   isOpen,
   warningLevel,
+  faceOutOfBounds,
+  gazeOutOfBounds,
   onClose,
   onForceExit,
 }: ActivityWarningModalProps) {
@@ -41,25 +45,34 @@ export default function ActivityWarningModal({
   }
 
   const getWarningMessage = () => {
+    // 얼굴 감지 실패가 더 심각한 상황인지 확인
+    const isFaceDetectionIssue = faceOutOfBounds > gazeOutOfBounds
+
     switch (warningLevel) {
       case 1:
         return {
-          title: '활동 감지 경고',
-          message:
-            '3초 동안 모니터에 시선이 감지되지 않았습니다. 시험을 계속 진행하시겠습니까?',
+          title: isFaceDetectionIssue ? '얼굴 감지 경고' : '시선 감지 경고',
+          message: isFaceDetectionIssue
+            ? '3초 동안 얼굴이 감지되지 않았습니다. 얼굴이 화면에 잘 보이도록 위치를 조정해 주세요.'
+            : '3초 동안 모니터에 시선이 감지되지 않았습니다. 시험을 계속 진행하시겠습니까?',
           buttonText: '시험 계속하기',
         }
       case 2:
         return {
-          title: '최종 경고',
-          message:
-            '1분 동안 모니터에 시선이 감지되지 않았습니다. 2분 후 자동으로 시험이 종료됩니다.',
+          title: isFaceDetectionIssue
+            ? '얼굴 감지 최종 경고'
+            : '시선 감지 최종 경고',
+          message: isFaceDetectionIssue
+            ? '1분 동안 얼굴이 감지되지 않았습니다. 얼굴이 카메라에 잘 보이도록 해주세요. 2분 후 자동으로 시험이 종료됩니다.'
+            : '1분 동안 모니터에 시선이 감지되지 않았습니다. 2분 후 자동으로 시험이 종료됩니다.',
           buttonText: '시험 계속하기',
         }
       case 3:
         return {
           title: '시험 종료',
-          message: '3분 동안 시선이 감지되지 않아 시험이 자동으로 종료됩니다.',
+          message: isFaceDetectionIssue
+            ? '3분 동안 얼굴이 감지되지 않아 시험이 자동으로 종료됩니다.'
+            : '3분 동안 시선이 감지되지 않아 시험이 자동으로 종료됩니다.',
           buttonText: '확인',
         }
       default:

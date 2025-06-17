@@ -6,6 +6,7 @@ interface UserActivity {
   warningLevel: number
   lastActiveTime: number
   gazeOutOfBounds: number
+  faceOutOfBounds: number
   isModalShown: boolean
 }
 
@@ -29,7 +30,7 @@ const CalibrationContext = createContext<CalibrationContextType | undefined>(
 )
 
 export function CalibrationProvider({ children }: { children: ReactNode }) {
-  const [isCalibrated, setIsCalibrated] = useState(true)
+  const [isCalibrated, setIsCalibrated] = useState(false)
   const [isWebGazerReady, setIsWebGazerReady] = useState(false)
   const [currentGaze, setCurrentGaze] = useState<WebGazerData | null>(null)
   const [isPredictionPointsVisible, setIsPredictionPointsVisible] =
@@ -38,6 +39,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     warningLevel: 0,
     lastActiveTime: Date.now(),
     gazeOutOfBounds: 0,
+    faceOutOfBounds: 0,
     isModalShown: false,
   })
 
@@ -83,7 +85,10 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     window.webgazer.setGazeListener((data: WebGazerData | null) => {
       if (data) {
         setCurrentGaze(data)
-        updateUserActivity(data)
+        updateUserActivity(data, true) // 얼굴이 감지됨
+      } else {
+        // 얼굴이 감지되지 않음
+        updateUserActivity(null, false)
       }
     })
   }
@@ -95,41 +100,74 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
   }
 
   // 사용자 활동 업데이트
-  function updateUserActivity(gazeData: WebGazerData) {
+  function updateUserActivity(
+    gazeData: WebGazerData | null,
+    isFaceDetected: boolean,
+  ) {
     const now = Date.now()
-    const isOutOfBounds =
-      gazeData.x < 0 ||
-      gazeData.x > window.innerWidth ||
-      gazeData.y < 0 ||
-      gazeData.y > window.innerHeight
 
     setUserActivity((prev) => {
       const newActivity = { ...prev, lastActiveTime: now }
 
-      if (isOutOfBounds) {
-        newActivity.gazeOutOfBounds += 1
+      // 얼굴이 감지되지 않은 경우
+      if (!isFaceDetected) {
+        newActivity.faceOutOfBounds += 1
 
-        // 경고 레벨 계산
-        if (newActivity.gazeOutOfBounds > 80 * 20 * 3) {
+        // 얼굴 감지 실패 경고 레벨 계산
+        if (newActivity.faceOutOfBounds > 80 * 20 * 3) {
           newActivity.warningLevel = 3 // 강제 종료
           newActivity.isModalShown = true
-        } else if (newActivity.gazeOutOfBounds > 80 * 20) {
+        } else if (newActivity.faceOutOfBounds > 80 * 20) {
           newActivity.warningLevel = 2 // 심각한 경고
           newActivity.isModalShown = true
-        } else if (newActivity.gazeOutOfBounds > 80) {
+        } else if (newActivity.faceOutOfBounds > 80) {
           newActivity.warningLevel = 1 // 일반 경고
           newActivity.isModalShown = true
         }
-      } else {
-        // 화면 내부에 시선이 있으면 카운터 리셋하지만 모달이 표시된 상태라면 경고 레벨 유지
-        newActivity.gazeOutOfBounds = Math.max(
-          0,
-          newActivity.gazeOutOfBounds - 1,
-        )
-        // 모달이 표시되지 않은 상태에서만 경고 레벨을 0으로 리셋
-        if (newActivity.gazeOutOfBounds < 20 && !newActivity.isModalShown) {
-          newActivity.warningLevel = 0
+        return newActivity
+      }
+
+      // 얼굴이 감지된 경우 - 시선 위치 확인
+      if (gazeData) {
+        const isGazeOutOfBounds =
+          gazeData.x < 0 ||
+          gazeData.x > window.innerWidth ||
+          gazeData.y < 0 ||
+          gazeData.y > window.innerHeight
+
+        if (isGazeOutOfBounds) {
+          newActivity.gazeOutOfBounds += 1
+
+          // 시선 이탈 경고 레벨 계산
+          if (newActivity.gazeOutOfBounds > 80 * 20 * 3) {
+            newActivity.warningLevel = 3 // 강제 종료
+            newActivity.isModalShown = true
+          } else if (newActivity.gazeOutOfBounds > 80 * 20) {
+            newActivity.warningLevel = 2 // 심각한 경고
+            newActivity.isModalShown = true
+          } else if (newActivity.gazeOutOfBounds > 80) {
+            newActivity.warningLevel = 1 // 일반 경고
+            newActivity.isModalShown = true
+          }
+        } else {
+          // 시선이 화면 내부에 있으면 카운터 감소
+          newActivity.gazeOutOfBounds = Math.max(
+            0,
+            newActivity.gazeOutOfBounds - 1,
+          )
         }
+      }
+
+      // 얼굴이 감지되면 얼굴 감지 실패 카운터 감소
+      newActivity.faceOutOfBounds = Math.max(0, newActivity.faceOutOfBounds - 1)
+
+      // 모달이 표시되지 않은 상태에서만 경고 레벨을 0으로 리셋
+      if (
+        newActivity.gazeOutOfBounds < 20 &&
+        newActivity.faceOutOfBounds < 20 &&
+        !newActivity.isModalShown
+      ) {
+        newActivity.warningLevel = 0
       }
 
       return newActivity
@@ -167,6 +205,7 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
       warningLevel: 0,
       lastActiveTime: Date.now(),
       gazeOutOfBounds: 0,
+      faceOutOfBounds: 0,
       isModalShown: false,
     })
   }
