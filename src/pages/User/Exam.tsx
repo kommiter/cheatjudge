@@ -24,6 +24,7 @@ export default function Exam() {
   const [submissionResult, setSubmissionResult] = useState<
     SubmitCodeResponse | undefined
   >(undefined)
+  const [requestIndex, setRequestIndex] = useState(0)
 
   // React Query Mutation
   const submitCodeMutation = useSubmitCodeMutation({
@@ -39,7 +40,7 @@ export default function Exam() {
     },
   })
 
-  // 5초마다 코드를 N8N으로 전송
+  // 20초마다 코드를 N8N으로 전송
   useEffect(() => {
     const sendCodeToN8N = async () => {
       const n8nUrl = import.meta.env.VITE_N8N_URL
@@ -47,7 +48,7 @@ export default function Exam() {
 
       try {
         const payload = {
-          index: currentProblem.id,
+          index: requestIndex,
           createdAt: new Date().toISOString().replace('T', '-').split('.')[0],
           contents: code,
         }
@@ -59,15 +60,18 @@ export default function Exam() {
           },
           body: JSON.stringify(payload),
         })
+
+        // 요청 후 index 증가
+        setRequestIndex((prev) => prev + 1)
       } catch (error) {
         console.error('N8N으로 코드 전송 실패:', error)
       }
     }
 
-    const interval = setInterval(sendCodeToN8N, 5000)
+    const interval = setInterval(sendCodeToN8N, 20000)
 
     return () => clearInterval(interval)
-  }, [code, currentProblem.id])
+  }, [code, requestIndex])
 
   // 코드 실행 함수
   const runCode = () => {
