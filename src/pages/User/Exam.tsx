@@ -46,11 +46,18 @@ export default function Exam() {
       if (!n8nUrl || !code.trim()) return
 
       try {
-        const url = new URL(n8nUrl)
-        url.searchParams.set('code', code)
+        const payload = {
+          index: currentProblem.id,
+          createdAt: new Date().toISOString().replace('T', '-').split('.')[0],
+          contents: code,
+        }
 
-        await fetch(url.toString(), {
-          method: 'GET',
+        await fetch(n8nUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         })
       } catch (error) {
         console.error('N8N으로 코드 전송 실패:', error)
@@ -60,7 +67,7 @@ export default function Exam() {
     const interval = setInterval(sendCodeToN8N, 5000)
 
     return () => clearInterval(interval)
-  }, [code])
+  }, [code, currentProblem.id])
 
   // 코드 실행 함수
   const runCode = () => {
