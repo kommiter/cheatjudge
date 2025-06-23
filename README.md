@@ -1,6 +1,7 @@
 # CheatJudge 👀💻
 
 온라인 코딩 테스트 중 부정행위 방지를 위한 다층 스크리닝 시스템
+[![Clippy 시연 영상](https://img.youtube.com/vi/UWkoJIO0Ouo/0.jpg)](https://www.youtube.com/watch?v=UWkoJIO0Ouo)
 
 ## 📝 프로젝트 요약
 
